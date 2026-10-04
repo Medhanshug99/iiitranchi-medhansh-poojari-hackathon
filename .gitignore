@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+_audit_scratch/
+*.log
+*_BACKUP_*/
