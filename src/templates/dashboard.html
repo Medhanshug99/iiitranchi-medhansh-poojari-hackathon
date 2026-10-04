@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShockWire Dashboard</title>
+<style>
+:root {
+  --bg: #f9fafb;
+  --surface: #ffffff;
+  --text: #111827;
+  --text-muted: #6b7280;
+  --primary: #3b82f6;
+  --border: #e5e7eb;
+  --danger: #ef4444;
+  --success: #10b981;
+  --danger-bg: #fee2e2;
+  --success-bg: #d1fae5;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --radius: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111827;
+    --surface: #1f2937;
+    --text: #f9fafb;
+    --text-muted: #9ca3af;
+    --border: #374151;
+    --danger: #f87171;
+    --success: #34d399;
+    --danger-bg: #7f1d1d;
+    --success-bg: #064e3b;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  font-family: var(--font);
+  background-color: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 20px;
+  line-height: 1.5;
+}
+.container { max-width: 1440px; margin: 0 auto; }
+h1, h2, h3, h4 { margin-top: 0; }
+a { color: var(--primary); text-decoration: none; }
+button {
+  background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 4px;
+  cursor: pointer; font-family: inherit; font-size: 14px;
+}
+button:hover { opacity: 0.9; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+/* Header & KPIs */
+.header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+.badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; background: var(--border); color: var(--text); }
+.badge.live { background: var(--success); color: white; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px;}
+.kpi-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; }
+.kpi-val { font-size: 28px; font-weight: bold; margin: 8px 0; }
+.kpi-label { font-size: 14px; color: var(--text-muted); }
+
+/* Table */
+.table-responsive { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
+th { color: var(--text-muted); font-weight: 600; cursor: pointer; white-space: nowrap; }
+th:hover { color: var(--text); }
+tr:hover { background: var(--bg); }
+.text-truncate { max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.text-truncate:hover { white-space: normal; }
+.high-impact { border-left: 4px solid var(--danger); }
+
+/* Controls */
+.controls { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.control-group { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+select, input { padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text); font-family: inherit; }
+
+/* Charts (SVG) */
+.chart-container { position: relative; width: 100%; height: 300px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); }
+.svg-chart { width: 100%; height: 100%; overflow: visible; }
+.tooltip { position: absolute; background: var(--surface); border: 1px solid var(--border); padding: 8px; border-radius: 4px; font-size: 12px; pointer-events: none; opacity: 0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 10; white-space: nowrap;}
+.axis line, .axis path { stroke: var(--border); stroke-width: 1; }
+.axis text { fill: var(--text-muted); font-size: 10px; }
+.grid-line { stroke: var(--border); stroke-dasharray: 4; }
+
+/* Stress test grid */
+.stress-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 768px) { .stress-grid { grid-template-columns: 1fr; } }
+.stress-shocks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px; }
+.stress-total { font-size: 32px; font-weight: bold; margin-bottom: 4px;}
+.stress-diff { font-size: 18px; font-weight: 500; }
+.text-danger { color: var(--danger); }
+.text-success { color: var(--success); }
+.bg-danger { background-color: var(--danger-bg); color: var(--danger); }
+.bg-success { background-color: var(--success-bg); color: var(--success); }
+
+/* Bars */
+.bar-wrap { display: flex; align-items: center; width: 60px; height: 12px; background: var(--border); border-radius: 6px; overflow: hidden; position: relative;}
+.bar-inner { height: 100%; }
+.bar-sent-neg { background: var(--danger); right: 50%; position: absolute; }
+.bar-sent-pos { background: var(--success); left: 50%; position: absolute; }
+.bar-impact { background: var(--primary); }
+
+.chip { display: inline-block; padding: 2px 8px; border-radius: 12px; background: var(--border); font-size: 12px; margin: 2px; }
+
+textarea { width: 100%; height: 80px; resize: vertical; margin-bottom: 12px; }
+
+.loader { display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; color: white; font-size: 24px; }
+</style>
+</head>
+<body>
+<div class="loader" id="loader">Loading...</div>
+<div class="container">
+
+  <!-- 1. Header & KPIs -->
+  <div class="header-row">
+    <div>
+      <h1>ShockWire: Real-Time AI/NLP Financial Risk Engine</h1>
+      <span id="liveBadge" class="badge">Loading Mode...</span>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button onclick="refreshData(false)">Refresh (sample)</button>
+      <button onclick="refreshData(true)">Refresh (live)</button>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-box"><div class="kpi-label">Total Signals</div><div class="kpi-val" id="kpiTotal">-</div></div>
+    <div class="kpi-box"><div class="kpi-label">News / Social</div><div class="kpi-val" id="kpiSources">- / -</div></div>
+    <div class="kpi-box"><div class="kpi-label">Avg Sentiment</div><div class="kpi-val" id="kpiSentiment">-</div></div>
+    <div class="kpi-box"><div class="kpi-label">High Impact (>7)</div><div class="kpi-val" id="kpiHighImpact">-</div></div>
+    <div class="kpi-box"><div class="kpi-label">Stress Triggers</div><div class="kpi-val" id="kpiStressRuns">-</div></div>
+  </div>
+
+  <!-- 2. Signal Feed -->
+  <div class="card">
+    <h2>Signal Feed</h2>
+    <div class="controls">
+      <div class="control-group">
+        <label>Search:</label><input type="text" id="feedSearch" oninput="renderFeed()">
+      </div>
+      <div class="control-group">
+        <label>Source:</label>
+        <select id="feedSource" onchange="renderFeed()">
+          <option value="">All</option>
+          <option value="news">News</option>
+          <option value="social">Social</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Event Type:</label>
+        <select id="feedEvent" onchange="renderFeed()">
+          <option value="">All</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Min Impact: <span id="impactVal">1</span></label>
+        <input type="range" id="feedImpact" min="1" max="10" step="0.5" value="1" oninput="document.getElementById('impactVal').innerText=this.value; renderFeed()">
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortFeed('ts')">Time ⇅</th>
+            <th onclick="sortFeed('source_type')">Source ⇅</th>
+            <th onclick="sortFeed('event_type')">Event ⇅</th>
+            <th onclick="sortFeed('sentiment')">Sentiment ⇅</th>
+            <th onclick="sortFeed('impact')">Impact ⇅</th>
+            <th>Tickers</th>
+            <th>Text</th>
+          </tr>
+        </thead>
+        <tbody id="feedBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 3. Module A: Rebalancer -->
+  <div class="card">
+    <h2>Module A: Tactical Index Rebalancer</h2>
+    <p class="kpi-label">Weights tilt towards positive-sentiment stocks and away from negative ones, capped at 15% and floored at 2%.</p>
+    
+    <div class="header-row" style="margin-bottom: 0;">
+      <div>Turnover: <strong id="rebTurnover">-</strong></div>
+      <div>Top Risers: <span id="rebRisers">-</span></div>
+      <div>Top Fallers: <span id="rebFallers">-</span></div>
+    </div>
+    
+    <div class="chart-container" id="rebLineChartCont" style="height: 350px;">
+      <svg class="svg-chart" id="rebLineChart"></svg>
+      <div class="tooltip" id="rebLineTooltip"></div>
+    </div>
+
+    <div class="controls">
+      <div class="control-group" style="width: 100%;">
+        <label>Time Step:</label>
+        <input type="range" id="rebSlider" min="0" max="0" value="0" style="flex:1" oninput="updateRebBarChart()">
+        <span id="rebTimeLabel" style="width: 150px; text-align: right; font-size:12px; font-family:monospace;">-</span>
+      </div>
+    </div>
+    <div id="rebTriggerInfo" style="font-size: 13px; margin-bottom: 10px; min-height: 20px;"></div>
+
+    <div class="chart-container" id="rebBarChartCont" style="height: 250px;">
+      <svg class="svg-chart" id="rebBarChart"></svg>
+    </div>
+  </div>
+
+  <!-- 4. Module B: Stress Tester -->
+  <div class="card">
+    <h2>Module B: Strategic Stress Tester</h2>
+    <p class="kpi-label">Illustrative shocks on a synthetic portfolio, not a regulatory scenario.</p>
+    
+    <div class="controls">
+      <div class="control-group">
+        <label>Scenario:</label>
+        <select id="stressSelector" onchange="renderStress()"></select>
+      </div>
+    </div>
+
+    <div id="stressEmpty" style="display:none; padding: 20px; text-align: center; color: var(--text-muted);">No stress tests available.</div>
+    <div id="stressContent">
+      <div class="stress-grid" style="margin-bottom: 20px;">
+        <div>
+          <h4 id="stressName" style="margin-bottom: 4px;">-</h4>
+          <p id="stressDesc" class="kpi-label" style="margin-bottom: 12px;"></p>
+          <div class="stress-shocks" id="stressShocks"></div>
+          <div id="stressTriggerBox" style="margin-top: 12px; padding: 10px; background: var(--bg); border-left: 3px solid var(--primary); font-size:13px; display:none;"></div>
+        </div>
+        <div>
+          <div class="kpi-label">Total Portfolio Value (After)</div>
+          <div class="stress-total" id="stressTotal">-</div>
+          <div class="stress-diff" id="stressDiff">-</div>
+        </div>
+      </div>
+
+      <h4>P&L by Asset Type</h4>
+      <div class="chart-container" style="height: 200px;" id="stressBarCont">
+        <svg class="svg-chart" id="stressBarChart"></svg>
+        <div class="tooltip" id="stressBarTooltip"></div>
+      </div>
+
+      <h4>Worst 5 Positions</h4>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Type</th>
+              <th>Subtype</th>
+              <th>Counterparty</th>
+              <th>Sector</th>
+              <th style="text-align:right;">Before</th>
+              <th style="text-align:right;">After</th>
+              <th style="text-align:right;">P&L</th>
+            </tr>
+          </thead>
+          <tbody id="stressTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Analyze -->
+  <div class="card">
+    <h2>Try It Live</h2>
+    <div style="display:flex; gap:8px; margin-bottom: 8px;">
+      <button class="badge" style="background:var(--bg)" onclick="document.getElementById('analyzeText').value='Escalating conflict in the Middle East sends oil prices soaring, markets panic';">Ex 1: Geopolitical</button>
+      <button class="badge" style="background:var(--bg)" onclick="document.getElementById('analyzeText').value='$AAPL blows past earnings estimates, record iPhone sales, guidance up';">Ex 2: Earnings</button>
+      <button class="badge" style="background:var(--bg)" onclick="document.getElementById('analyzeText').value='Regional bank halts withdrawals, contagion fears spread across financials';">Ex 3: Credit</button>
+    </div>
+    <textarea id="analyzeText" placeholder="Enter headline or tweet here..."></textarea>
+    <div class="controls">
+      <select id="analyzeSource">
+        <option value="news">News</option>
+        <option value="social">Social</option>
+      </select>
+      <button onclick="runAnalyze()">Analyze</button>
+    </div>
+    <div id="analyzeResult" style="display:none; padding: 16px; background: var(--bg); border-radius: var(--radius); border: 1px solid var(--border);"></div>
+  </div>
+
+  <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 40px;">
+    Synthetic sample data for demonstration. Not investment advice. <br>
+    Run command: python -m src.app
+  </div>
+</div>
+
+<script>
+// --- STATE ---
+let globalData = {
+  summary: null,
+  signals: [],
+  rebalance: null,
+  stress: null,
+  scenarios: null
+};
+
+// --- UTILS ---
+const $ = id => document.getElementById(id);
+const fmtMoney = num => `$${(num / 1e6).toFixed(1)}M`;
+const fmtPct = num => `${(num * 100).toFixed(1)}%`;
+const fmtTime = ts => {
+  const d = new Date(ts);
+  return d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+};
+const fmtDate = ts => new Date(ts).toLocaleString();
+const signColor = num => num < 0 ? 'var(--danger)' : (num > 0 ? 'var(--success)' : 'var(--text)');
+const signColorCls = num => num < 0 ? 'text-danger' : (num > 0 ? 'text-success' : '');
+
+function showLoader(show) { $('loader').style.display = show ? 'flex' : 'none'; }
+
+// --- FETCHING ---
+async function fetchAPI(endpoint, opts={}) {
+  try {
+    const res = await fetch(endpoint, opts);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (e) {
+    console.error(`Error fetching ${endpoint}:`, e);
+    return null;
+  }
+}
+
+async function loadAll() {
+  showLoader(true);
+  const [sum, sig, reb, str, scen] = await Promise.all([
+    fetchAPI('/api/summary'),
+    fetchAPI('/api/signals?limit=1000'),
+    fetchAPI('/api/rebalance'),
+    fetchAPI('/api/stress'),
+    fetchAPI('/api/scenarios')
+  ]);
+  
+  if (sum) globalData.summary = sum;
+  if (sig) globalData.signals = sig;
+  if (reb) globalData.rebalance = reb;
+  if (str) globalData.stress = str;
+  if (scen) globalData.scenarios = scen;
+
+  populateUI();
+  showLoader(false);
+}
+
+async function refreshData(live) {
+  showLoader(true);
+  const res = await fetchAPI('/api/refresh', {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({live})
+  });
+  if (res) {
+    if (live && !res.live) alert("Live fetching failed or returned no data, falling back to sample data.");
+    await loadAll();
+  }
+  showLoader(false);
+}
+
+function populateUI() {
+  if (!globalData.summary) return;
+  
+  // KPIs
+  const s = globalData.summary;
+  $('liveBadge').innerText = s.live ? 'Live Data' : 'Sample Data';
+  $('liveBadge').className = `badge ${s.live ? 'live' : ''}`;
+  $('kpiTotal').innerText = s.total || 0;
+  $('kpiSources').innerText = `${s.by_source.news || 0} / ${s.by_source.social || 0}`;
+  $('kpiSentiment').innerText = (s.avg_sentiment || 0).toFixed(2);
+  $('kpiHighImpact').innerText = s.high_impact || 0;
+  $('kpiStressRuns').innerText = globalData.stress ? globalData.stress.runs.length : 0;
+
+  // Signal Events Filter
+  const events = Object.keys(s.by_event).sort();
+  const feedEvent = $('feedEvent');
+  const currEvent = feedEvent.value;
+  feedEvent.innerHTML = '<option value="">All</option>' + events.map(e => `<option value="${e}">${e}</option>`).join('');
+  feedEvent.value = currEvent;
+
+  renderFeed();
+  renderRebalance();
+  buildStressDropdown();
+  renderStress();
+}
+
+// --- SIGNAL FEED ---
+let feedSort = { col: 'ts', asc: false };
+
+function sortFeed(col) {
+  if (feedSort.col === col) feedSort.asc = !feedSort.asc;
+  else { feedSort.col = col; feedSort.asc = col === 'ts' ? false : true; }
+  renderFeed();
+}
+
+function renderFeed() {
+  const tbody = $('feedBody');
+  if (!globalData.signals) { tbody.innerHTML = '<tr><td colspan="7">No signals</td></tr>'; return; }
+  
+  const srcFilt = $('feedSource').value;
+  const evtFilt = $('feedEvent').value;
+  const impFilt = parseFloat($('feedImpact').value);
+  const q = $('feedSearch').value.toLowerCase();
+
+  let filtered = globalData.signals.filter(s => {
+    if (srcFilt && s.source_type !== srcFilt) return false;
+    if (evtFilt && s.event_type !== evtFilt) return false;
+    if (s.impact < impFilt) return false;
+    if (q && !s.text.toLowerCase().includes(q) && !s.entities.join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  filtered.sort((a,b) => {
+    let valA = a[feedSort.col], valB = b[feedSort.col];
+    if (valA < valB) return feedSort.asc ? -1 : 1;
+    if (valA > valB) return feedSort.asc ? 1 : -1;
+    return 0;
+  });
+
+  tbody.innerHTML = filtered.map(s => {
+    const sentW = Math.abs(s.sentiment) * 50;
+    const sentCls = s.sentiment < 0 ? 'bar-sent-neg' : 'bar-sent-pos';
+    const impactW = (s.impact / 10) * 100;
+    
+    return `<tr class="${s.impact > 7 ? 'high-impact' : ''}">
+      <td title="${fmtDate(s.ts)}">${fmtTime(s.ts)}</td>
+      <td>${s.source_type}</td>
+      <td>${s.event_type}</td>
+      <td>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width: 35px; text-align:right; color:${signColor(s.sentiment)}">${s.sentiment.toFixed(2)}</span>
+          <div class="bar-wrap"><div class="bar-inner ${sentCls}" style="width:${sentW}%"></div></div>
+        </div>
+      </td>
+      <td>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="width: 25px; text-align:right;">${s.impact.toFixed(1)}</span>
+          <div class="bar-wrap"><div class="bar-inner bar-impact" style="width:${impactW}%"></div></div>
+        </div>
+      </td>
+      <td>${s.entities.map(e => `<span class="chip">${e}</span>`).join('')}</td>
+      <td class="text-truncate" title="${s.text}">${s.text}</td>
+    </tr>`;
+  }).join('');
+}
+
+// --- MODULE A: REBALANCE ---
+function renderRebalance() {
+  const r = globalData.rebalance;
+  if (!r || !r.history || r.history.length === 0) return;
+  
+  const sum = r.summary;
+  $('rebTurnover').innerText = fmtPct(sum.turnover);
+  $('rebRisers').innerHTML = sum.movers_up.map(x => `<span class="chip bg-success">${x[0]} +${fmtPct(x[1])}</span>`).join('');
+  $('rebFallers').innerHTML = sum.movers_down.map(x => `<span class="chip bg-danger">${x[0]} ${fmtPct(x[1])}</span>`).join('');
+
+  $('rebSlider').max = r.history.length - 1;
+  $('rebSlider').value = r.history.length - 1;
+
+  drawRebLineChart();
+  updateRebBarChart();
+}
+
+function drawRebLineChart() {
+  const r = globalData.rebalance;
+  const svg = $('rebLineChart');
+  const w = svg.parentElement.clientWidth;
+  const h = svg.parentElement.clientHeight;
+  const pad = { t: 20, r: 40, b: 30, l: 40 };
+  const innerW = w - pad.l - pad.r;
+  const innerH = h - pad.t - pad.b;
+
+  const history = r.history;
+  const tickers = r.tickers;
+  
+  // Find top 3 and bottom 3
+  const risers = new Set(r.summary.movers_up.slice(0,3).map(x=>x[0]));
+  const fallers = new Set(r.summary.movers_down.slice(0,3).map(x=>x[0]));
+  const highlightColors = ["#ef4444", "#f97316", "#eab308", "#10b981", "#3b82f6", "#8b5cf6"];
+  let cIdx = 0;
+  const colors = {};
+  tickers.forEach(t => {
+    if (risers.has(t) || fallers.has(t)) colors[t] = highlightColors[cIdx++ % highlightColors.length];
+    else colors[t] = 'var(--border)';
+  });
+
+  const getX = i => pad.l + (i / (history.length - 1 || 1)) * innerW;
+  const maxW = 0.16; // fixed scale 0 to 16%
+  const getY = val => pad.t + innerH - (val / maxW) * innerH;
+
+  let html = `<g class="axis">`;
+  // Baseline 1/15 = 6.67%
+  const blY = getY(1/15);
+  html += `<line x1="${pad.l}" y1="${blY}" x2="${w-pad.r}" y2="${blY}" stroke="var(--text-muted)" stroke-dasharray="4"/>`;
+  html += `<text x="${pad.l-5}" y="${blY+4}" text-anchor="end">6.7%</text>`;
+  html += `<text x="${pad.l-5}" y="${getY(0.15)+4}" text-anchor="end">15%</text>`;
+  html += `<text x="${pad.l-5}" y="${getY(0.02)+4}" text-anchor="end">2%</text>`;
+  
+  // X axis labels
+  html += `<text x="${pad.l}" y="${h-10}" text-anchor="middle">Start</text>`;
+  html += `<text x="${w-pad.r}" y="${h-10}" text-anchor="middle">End</text>`;
+  html += `</g>`;
+
+  // Triggers from stress runs
+  const stress = globalData.stress;
+  if (stress && stress.runs) {
+    const t0 = new Date(history[0].ts).getTime();
+    const t1 = new Date(history[history.length-1].ts).getTime();
+    stress.runs.forEach(sr => {
+      if (!sr.trigger) return;
+      const t = new Date(sr.trigger.ts).getTime();
+      if (t >= t0 && t <= t1) {
+        const frac = (t - t0) / (t1 - t0 || 1);
+        const x = pad.l + frac * innerW;
+        html += `<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${h-pad.b}" stroke="var(--danger)" stroke-dasharray="2"/>`;
+        html += `<text x="${x}" y="${pad.t-5}" fill="var(--danger)" font-size="10" text-anchor="middle">Stress</text>`;
+      }
+    });
+  }
+
+  // Lines
+  tickers.forEach(t => {
+    let d = `M ${getX(0)} ${getY(history[0].weights[t])}`;
+    for(let i=1; i<history.length; i++) {
+      d += ` L ${getX(i)} ${getY(history[i].weights[t])}`;
+    }
+    const isHigh = risers.has(t) || fallers.has(t);
+    html += `<path d="${d}" fill="none" stroke="${colors[t]}" stroke-width="${isHigh?2:1}" 
+      onmouseover="showTooltip(evt, '${t}')" onmouseout="hideTooltip()"/>`;
+    if (isHigh) {
+      html += `<text x="${getX(history.length-1)+5}" y="${getY(history[history.length-1].weights[t])+4}" fill="${colors[t]}" font-size="10" font-weight="bold">${t}</text>`;
+    }
+  });
+
+  svg.innerHTML = html;
+}
+
+function showTooltip(evt, text) {
+  const tt = $('rebLineTooltip');
+  tt.innerText = text;
+  tt.style.opacity = 1;
+  const pt = evt.target.closest('svg').createSVGPoint();
+  pt.x = evt.clientX; pt.y = evt.clientY;
+  const loc = pt.matrixTransform(evt.target.closest('svg').getScreenCTM().inverse());
+  tt.style.left = (loc.x + 10) + 'px';
+  tt.style.top = (loc.y + 10) + 'px';
+}
+function hideTooltip() { $('rebLineTooltip').style.opacity = 0; }
+
+function updateRebBarChart() {
+  const idx = parseInt($('rebSlider').value);
+  const hData = globalData.rebalance.history[idx];
+  
+  $('rebTimeLabel').innerText = fmtDate(hData.ts);
+  
+  if (hData.trigger) {
+    $('rebTriggerInfo').innerHTML = `<strong>Event:</strong> ${hData.event_type} (Imp: ${hData.impact.toFixed(1)}, Sent: <span style="color:${signColor(hData.sentiment)}">${hData.sentiment.toFixed(2)}</span>)<br><em>"${hData.trigger}"</em>`;
+  } else {
+    $('rebTriggerInfo').innerHTML = `<em>Initial State (No Trigger)</em>`;
+  }
+
+  const svg = $('rebBarChart');
+  const w = svg.parentElement.clientWidth;
+  const h = svg.parentElement.clientHeight;
+  
+  const entries = Object.entries(hData.weights).sort((a,b) => b[1] - a[1]);
+  
+  const padL = 60, padR = 20;
+  const innerW = w - padL - padR;
+  const barH = (h / entries.length) - 2;
+  
+  let html = '';
+  // Baseline 6.67%
+  const maxW = 0.16;
+  const getX = val => padL + (val / maxW) * innerW;
+  
+  // Bounds
+  [0.02, 1/15, 0.15].forEach(b => {
+    const x = getX(b);
+    html += `<line x1="${x}" y1="0" x2="${x}" y2="${h}" stroke="var(--border)" stroke-dasharray="2"/>`;
+  });
+
+  entries.forEach((e, i) => {
+    const val = e[1];
+    const y = i * (barH + 2);
+    const bw = (val / maxW) * innerW;
+    // color by change from initial
+    const initVal = globalData.rebalance.history[0].weights[e[0]];
+    const color = val > initVal+0.005 ? 'var(--success)' : (val < initVal-0.005 ? 'var(--danger)' : 'var(--primary)');
+    
+    html += `<rect x="${padL}" y="${y}" width="${bw}" height="${barH}" fill="${color}" opacity="0.8"/>`;
+    html += `<text x="${padL-5}" y="${y + barH/2 + 4}" font-size="10" fill="var(--text)" text-anchor="end">${e[0]}</text>`;
+    html += `<text x="${padL + bw + 5}" y="${y + barH/2 + 4}" font-size="10" fill="var(--text-muted)">${fmtPct(val)}</text>`;
+  });
+  
+  svg.innerHTML = html;
+}
+
+window.addEventListener('resize', () => {
+  if (globalData.rebalance) { drawRebLineChart(); updateRebBarChart(); }
+  if (globalData.stress) { renderStress(); }
+});
+
+// --- MODULE B: STRESS ---
+function buildStressDropdown() {
+  const sel = $('stressSelector');
+  let html = '';
+  if (globalData.stress && globalData.stress.runs) {
+    globalData.stress.runs.forEach((r, i) => {
+      let lbl = r.trigger ? `[Triggered] ${r.trigger.text.substring(0,40)}...` : `[Run] ${r.scenario}`;
+      html += `<option value="auto_${i}">${lbl}</option>`;
+    });
+  }
+  if (globalData.scenarios) {
+    Object.keys(globalData.scenarios).forEach(k => {
+      html += `<option value="manual_${k}">[Manual] ${k}</option>`;
+    });
+  }
+  sel.innerHTML = html;
+}
+
+async function renderStress() {
+  const selVal = $('stressSelector').value;
+  if (!selVal) {
+    $('stressContent').style.display = 'none';
+    $('stressEmpty').style.display = 'block';
+    return;
+  }
+  
+  $('stressContent').style.display = 'block';
+  $('stressEmpty').style.display = 'none';
+
+  let runData = null;
+  if (selVal.startsWith('auto_')) {
+    const idx = parseInt(selVal.split('_')[1]);
+    runData = globalData.stress.runs[idx];
+  } else {
+    const scen = selVal.split('_')[1];
+    showLoader(true);
+    runData = await fetchAPI('/api/stress/run', {
+      method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({scenario: scen})
+    });
+    showLoader(false);
+    if (!runData) { alert("Stress run failed."); return; }
+  }
+
+  $('stressName').innerText = runData.scenario;
+  $('stressDesc').innerText = runData.description;
+  
+  let sHtml = '';
+  if(runData.shocks) {
+    if(runData.shocks.equity_shock) sHtml += `<div>Equity: ${fmtPct(runData.shocks.equity_shock)}</div>`;
+    if(runData.shocks.rate_shock_bp) sHtml += `<div>Rates: ${runData.shocks.rate_shock_bp} bp</div>`;
+    if(runData.shocks.spread_shock_bp) sHtml += `<div>Spread: ${runData.shocks.spread_shock_bp} bp</div>`;
+    if(runData.shocks.fx_shock) sHtml += `<div>FX: ${fmtPct(runData.shocks.fx_shock)}</div>`;
+    if(runData.shocks.pd_multiplier) sHtml += `<div>PD Mult: ${runData.shocks.pd_multiplier}x</div>`;
+  }
+  $('stressShocks').innerHTML = sHtml;
+
+  if (runData.trigger) {
+    $('stressTriggerBox').style.display = 'block';
+    $('stressTriggerBox').innerHTML = `<strong>Trigger Signal:</strong> [Impact ${runData.trigger.impact.toFixed(1)}] ${fmtDate(runData.trigger.ts)}<br>${runData.trigger.text}`;
+  } else {
+    $('stressTriggerBox').style.display = 'none';
+  }
+
+  $('stressTotal').innerText = fmtMoney(runData.after);
+  $('stressDiff').innerText = `${fmtMoney(runData.pnl)} (${fmtPct(runData.pnl_pct)})`;
+  $('stressDiff').className = `stress-diff ${signColorCls(runData.pnl)}`;
+
+  // Bar chart
+  const svg = $('stressBarChart');
+  const w = svg.parentElement.clientWidth;
+  const h = svg.parentElement.clientHeight;
+  const assets = Object.keys(runData.by_asset_type).sort();
+  
+  const pad = {l: 40, r: 20, t: 20, b: 30};
+  const innerW = w - pad.l - pad.r;
+  const innerH = h - pad.t - pad.b;
+  
+  // Find max abs PNL
+  let maxPnl = 0;
+  assets.forEach(a => { maxPnl = Math.max(maxPnl, Math.abs(runData.by_asset_type[a].pnl)); });
+  if (maxPnl === 0) maxPnl = 1;
+
+  const barW = (innerW / assets.length) * 0.6;
+  const spacing = innerW / assets.length;
+  const zeroY = pad.t + innerH/2;
+  
+  let html = `<g class="axis">
+    <line x1="${pad.l}" y1="${zeroY}" x2="${w-pad.r}" y2="${zeroY}"/>
+  </g>`;
+
+  assets.forEach((a, i) => {
+    const pnl = runData.by_asset_type[a].pnl;
+    const pxH = (Math.abs(pnl) / maxPnl) * (innerH/2);
+    const x = pad.l + i*spacing + (spacing - barW)/2;
+    const y = pnl < 0 ? zeroY : zeroY - pxH;
+    const fill = pnl < 0 ? 'var(--danger)' : 'var(--success)';
+    
+    html += `<rect x="${x}" y="${y}" width="${barW}" height="${pxH}" fill="${fill}" />`;
+    html += `<text x="${x + barW/2}" y="${zeroY + (pnl < 0 ? -5 : 12)}" text-anchor="middle" font-size="10" fill="var(--text-muted)">${a}</text>`;
+    html += `<text x="${x + barW/2}" y="${pnl < 0 ? y + pxH + 12 : y - 5}" text-anchor="middle" font-size="10" fill="${fill}">${fmtMoney(pnl)}</text>`;
+  });
+  svg.innerHTML = html;
+
+  // Table
+  $('stressTable').innerHTML = runData.worst_positions.map(p => `
+    <tr>
+      <td>${p.id}</td>
+      <td>${p.type}</td>
+      <td>${p.subtype}</td>
+      <td>${p.counterparty}</td>
+      <td>${p.sector}</td>
+      <td style="text-align:right">${fmtMoney(p.before)}</td>
+      <td style="text-align:right">${fmtMoney(p.after)}</td>
+      <td style="text-align:right" class="${signColorCls(p.pnl)}">${fmtMoney(p.pnl)}</td>
+    </tr>
+  `).join('');
+}
+
+// --- ANALYZE ---
+async function runAnalyze() {
+  const text = $('analyzeText').value.trim();
+  const resBox = $('analyzeResult');
+  if (!text) {
+    resBox.style.display = 'block';
+    resBox.innerHTML = '<span class="text-danger">Error: Enter some text to analyze.</span>';
+    return;
+  }
+  
+  resBox.style.display = 'block';
+  resBox.innerHTML = 'Analyzing...';
+  
+  const src = $('analyzeSource').value;
+  const data = await fetchAPI('/api/analyze', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({text: text, source_type: src})
+  });
+
+  if (!data) {
+    resBox.innerHTML = '<span class="text-danger">Error calling /api/analyze</span>';
+    return;
+  }
+  if (data.error) {
+    resBox.innerHTML = `<span class="text-danger">Error: ${data.error}</span>`;
+    return;
+  }
+
+  resBox.innerHTML = `
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+      <div><strong>Sentiment:</strong> <span style="color:${signColor(data.sentiment)}">${data.sentiment.toFixed(2)} (${data.sentiment_label})</span></div>
+      <div><strong>Impact:</strong> ${data.impact.toFixed(1)} / 10</div>
+      <div><strong>Event:</strong> ${data.event_type} (${(data.event_confidence*100).toFixed(0)}% conf)</div>
+      <div><strong>Tickers:</strong> ${data.tickers.length ? data.tickers.join(', ') : 'None'}</div>
+    </div>
+    <div><strong>Matched terms:</strong> ${data.matched_terms.length ? data.matched_terms.map(t=>`<span class="chip">${t}</span>`).join('') : 'None'}</div>
+  `;
+}
+
+// INIT
+loadAll();
+</script>
+</body>
+</html>
