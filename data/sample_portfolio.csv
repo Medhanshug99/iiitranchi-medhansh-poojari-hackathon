@@ -1,0 +1,26 @@
+id,asset_type,subtype,counterparty,sector,rating,currency,market_value,notional,duration,spread_dur,beta,pd,lgd,dv01,cs01,fx_direction
+L001,Loan,Term Loan,Helios Energy Corp,Energy,BB,USD,85000000,85000000,0,3.5,0,0.012,0.45,0,0,0
+L002,Loan,Revolver,Atlas Airlines,Transport,BB,USD,60000000,75000000,0,3.0,0,0.015,0.50,0,0,0
+L003,Loan,Term Loan,Northwind Retail,Consumer,BBB,USD,95000000,95000000,0,4.0,0,0.004,0.40,0,0,0
+L004,Loan,Syndicated Loan,Meridian Properties,Real Estate,BB,USD,70000000,70000000,0,4.5,0,0.014,0.45,0,0,0
+L005,Loan,Term Loan,Orion Semiconductors,Tech,A,USD,110000000,110000000,0,3.5,0,0.002,0.40,0,0,0
+L006,Loan,Trade Finance,Pacifica Shipping,Transport,BB,USD,45000000,45000000,0,2.0,0,0.016,0.50,0,0,0
+L007,Loan,Term Loan,Brightwell Healthcare,Health,BBB,USD,80000000,80000000,0,4.0,0,0.004,0.40,0,0,0
+L008,Loan,Term Loan,Summit Regional Bank,Financials,BBB,USD,65000000,65000000,0,3.0,0,0.005,0.45,0,0,0
+B001,Bond,US Treasury 10Y,US Government,Government,AAA,USD,150000000,150000000,8.4,0,0,0,0,0,0,0
+B002,Bond,US Treasury 5Y,US Government,Government,AAA,USD,100000000,100000000,4.6,0,0,0,0,0,0,0
+B003,Bond,IG Corporate,Fortuna Utilities,Utilities,A,USD,70000000,70000000,6.2,5.8,0,0,0,0,0,0
+B004,Bond,IG Corporate,Cobalt Financial,Financials,BBB,USD,55000000,55000000,5.5,5.1,0,0,0,0,0,0
+B005,Bond,HY Corporate,Vector Oilfield,Energy,B,USD,40000000,40000000,4.2,3.9,0,0,0,0,0,0
+B006,Bond,HY Corporate,Zenith Media,Consumer,BB,USD,35000000,35000000,4.8,4.4,0,0,0,0,0,0
+B007,Bond,EM Sovereign,Republic of Calderia,Sovereign,BB,USD,45000000,45000000,7.1,6.6,0,0,0,0,0,0
+D001,Derivative,IR Swap (pay fixed),Citadel Clearing,Financials,A,USD,2500000,300000000,0,0,0,0,0,130000,0,0
+D002,Derivative,IR Swap (receive fixed),Hanover Bank,Financials,A,USD,-1200000,150000000,0,0,0,0,0,-70000,0,0
+D003,Derivative,CDS Protection Bought,Index CDX.IG,Index,A,USD,800000,200000000,0,0,0,0,0,0,90000,0
+D004,Derivative,CDS Protection Sold,Index CDX.HY,Index,B,USD,-600000,50000000,0,0,0,0,0,0,-20000,0
+D005,Derivative,FX Forward EURUSD,Lumen Bank,Financials,A,EUR,500000,120000000,0,0,0,0,0,0,0,1
+D006,Derivative,FX Forward USDJPY,Kintsugi Securities,Financials,A,JPY,-300000,80000000,0,0,0,0,0,0,0,-1
+E001,Equity,Equity Holding,Nasdaq-100 Basket,Tech,NR,USD,60000000,60000000,0,0,1.15,0,0,0,0,0
+E002,Equity,Equity Holding,Energy Select Basket,Energy,NR,USD,35000000,35000000,0,0,0.95,0,0,0,0,0
+E003,Equity,Equity Holding,Financials Basket,Financials,NR,USD,40000000,40000000,0,0,1.20,0,0,0,0,0
+E004,Equity,Equity Holding,Healthcare Basket,Health,NR,USD,25000000,25000000,0,0,0.70,0,0,0,0,0
