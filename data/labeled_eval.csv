@@ -1,0 +1,104 @@
+id,text,sentiment,event_type,source_type
+E001,"Missile strikes hit oil terminal in Gulf shipping lane, crude jumps 6% as tanker traffic halts",negative,Geopolitical,news
+E002,"Border clashes escalate between two nuclear-armed neighbours, global equities retreat",negative,Geopolitical,news
+E003,"New sanctions package targets major energy exporter, European gas prices spike",negative,Geopolitical,news
+E004,"Ceasefire agreement signed after months of conflict, oil falls and stocks rally",positive,Geopolitical,news
+E005,"Foreign ministers to meet next week to discuss regional security arrangements",neutral,Geopolitical,news
+E006,"Naval blockade threatens key grain export route, wheat futures surge",negative,Geopolitical,news
+E007,"Markets are bleeding after the overnight attack. Not a good morning to be long anything.",negative,Geopolitical,social
+E008,"Trade truce between the two largest economies extended by 90 days, relief across Asian markets",positive,Geopolitical,news
+E009,"Summit between regional leaders ends with joint statement and no new measures",neutral,Geopolitical,news
+E010,"Coup attempt in major copper-producing nation sparks fears of mining disruption",negative,Geopolitical,news
+E011,"Another day, another war headline. Safe havens only, gold is the only green thing on my screen.",negative,Geopolitical,social
+E012,"Central bank springs surprise 75bp rate hike and warns of more tightening as inflation stays high",negative,Macroeconomic,news
+E013,"Inflation accelerates to 9.1%, well above forecasts, raising recession fears",negative,Macroeconomic,news
+E014,"Unemployment falls to a 50-year low as payrolls beat expectations by 120,000",positive,Macroeconomic,news
+E015,"Central bank leaves interest rates unchanged and repeats its data-dependent guidance",neutral,Macroeconomic,news
+E016,"GDP contracts for a second straight quarter, confirming a technical recession",negative,Macroeconomic,news
+E017,"Consumer price growth cools more than expected, boosting hopes of rate cuts",positive,Macroeconomic,news
+E018,"Retail sales rise 0.1% in line with economists' forecasts",neutral,Macroeconomic,news
+E019,"Yields spiking again, mortgage rates up, housing is going to get crushed. This tightening cycle is brutal.",negative,Macroeconomic,social
+E020,"Manufacturing PMI plunges below 45 as new orders collapse",negative,Macroeconomic,news
+E021,"Central bank signals it is done hiking as inflation retreats toward target",positive,Macroeconomic,news
+E022,"Treasury to auction 10-year notes on Wednesday",neutral,Macroeconomic,news
+E023,"Regional lender defaults on its senior bonds after deposit run, regulators step in",negative,Credit Event,news
+E024,"Rating agency downgrades sovereign debt to junk, spreads blow out",negative,Credit Event,news
+E025,"Property developer misses coupon payment, creditors prepare for restructuring",negative,Credit Event,news
+E026,"Credit default swaps on a major bank widen sharply amid funding concerns",negative,Credit Event,news
+E027,"Rating agency upgrades airline's debt to investment grade on improved cash flow",positive,Credit Event,news
+E028,"Distressed lender secures rescue financing, averting default",positive,Credit Event,news
+E029,"Rating agency affirms the utility's A- rating with a stable outlook",neutral,Credit Event,news
+E030,"If that bank can't roll its debt we're looking at contagion. Spreads tell the story.",negative,Credit Event,social
+E031,"Corporate bankruptcy filings jump to a decade high as borrowing costs bite",negative,Credit Event,news
+E032,"Company prices $2bn senior notes offering due 2031",neutral,Credit Event,news
+E033,"Loan losses mount as borrower enters Chapter 11",negative,Credit Event,news
+E034,"Chipmaker agrees to acquire rival in $18bn all-stock deal, shares jump",positive,Merger/Acquisition,news
+E035,"Two regional banks announce merger talks, no terms disclosed",neutral,Merger/Acquisition,news
+E036,"Acquirer walks away from takeover bid, target shares tumble 20%",negative,Merger/Acquisition,news
+E037,"Private equity firm offers 30% premium to take software company private",positive,Merger/Acquisition,news
+E038,"Company completes previously announced acquisition of logistics startup",neutral,Merger/Acquisition,news
+E039,"Shareholders approve merger, creating the country's largest insurer",positive,Merger/Acquisition,news
+E040,"Failed merger leaves company with heavy break fee and restructuring costs",negative,Merger/Acquisition,news
+E041,"Takeover premium on the table, shares gapping up pre-market. Nice start to the week.",positive,Merger/Acquisition,social
+E042,"Company explores strategic alternatives including a possible sale",neutral,Merger/Acquisition,news
+E043,"Spin-off of the cloud division completes, analysts say it unlocks value",positive,Merger/Acquisition,news
+E044,"Merger synergy forecast cut by half as integration problems emerge",negative,Merger/Acquisition,news
+E045,"Tech giant unveils next-generation smartphone with faster chip and improved battery",positive,Product Launch,news
+E046,"Automaker launches affordable electric sedan, pre-orders exceed expectations",positive,Product Launch,news
+E047,"Software firm releases version 4.0 of its analytics platform",neutral,Product Launch,news
+E048,"Product launch delayed by six months after manufacturing problems",negative,Product Launch,news
+E049,"Streaming service debuts ad-supported tier priced at $6.99 a month",neutral,Product Launch,news
+E050,"New chip announcement looks seriously impressive, benchmarks are way ahead of last gen.",positive,Product Launch,social
+E051,"Early reviews of the new headset are lukewarm and pre-order demand disappoints",negative,Product Launch,news
+E052,"Pharma company launches generic version of blockbuster drug in US market",neutral,Product Launch,news
+E053,"Cloud provider introduces new region in Singapore",neutral,Product Launch,news
+E054,"Game studio's new title sells five million copies in its first weekend",positive,Product Launch,news
+E055,"Airline announces new route from Delhi to Seattle starting next spring",neutral,Product Launch,news
+E056,"Bank reports quarterly profit of $3.2bn, beating estimates as lending income rises",positive,Earnings,news
+E057,"Retailer cuts full-year guidance after weak holiday sales, shares slide 12%",negative,Earnings,news
+E058,"Company to report third-quarter results on October 21 after the close",neutral,Earnings,news
+E059,"Chipmaker misses revenue estimates and warns of softer demand next quarter",negative,Earnings,news
+E060,"Oil major posts record annual profit and raises dividend",positive,Earnings,news
+E061,"Earnings in line with expectations, management reiterates full-year outlook",neutral,Earnings,news
+E062,"Terrible quarter from them. Margins collapsing and guidance is a joke.",negative,Earnings,social
+E063,"Software company lifts annual forecast after strong subscription growth",positive,Earnings,news
+E064,"Quarterly loss widens to $450m as costs balloon",negative,Earnings,news
+E065,"Beat and raise again!! Their earnings are just on another level this year.",positive,Earnings,social
+E066,"Revenue was flat year over year at $12.4bn while operating margin was unchanged",neutral,Earnings,news
+E067,"Profit warning: insurer says claims costs will hit full-year earnings",negative,Earnings,news
+E068,"Regulator fines bank $1.2bn over money laundering failures",negative,Regulatory/Legal,news
+E069,"Antitrust authority opens investigation into search giant's advertising practices",negative,Regulatory/Legal,news
+E070,"Court dismisses class action lawsuit against the drugmaker, shares rise",positive,Regulatory/Legal,news
+E071,"Securities regulator publishes consultation paper on new disclosure rules",neutral,Regulatory/Legal,news
+E072,"Government proposes windfall tax on energy companies' profits",negative,Regulatory/Legal,news
+E073,"Regulator grants licence to the fintech, allowing it to launch banking services",positive,Regulatory/Legal,news
+E074,"Company hit with $800m verdict in patent dispute and plans to appeal",negative,Regulatory/Legal,news
+E075,"Parliament committee holds hearing on proposed data privacy law",neutral,Regulatory/Legal,news
+E076,"Fine after fine after fine. This company never learns, compliance is a mess.",negative,Regulatory/Legal,social
+E077,"Authorities ban short selling in financial stocks for 30 days amid volatility",negative,Regulatory/Legal,news
+E078,"Appeals court overturns record penalty against the lender",positive,Regulatory/Legal,news
+E079,"Ransomware attack halts production at major manufacturer, systems offline for days",negative,Cyber/Operational,news
+E080,"Data breach exposes records of 40 million customers, company faces regulatory scrutiny",negative,Cyber/Operational,news
+E081,"Outage at cloud provider knocks payment platforms offline for six hours",negative,Cyber/Operational,news
+E082,"Bank says it is investigating unusual activity on its systems, no customer data affected so far",neutral,Cyber/Operational,news
+E083,"Systems fully restored after weekend outage, no data lost",positive,Cyber/Operational,news
+E084,"Factory fire halts output at key supplier, automakers warn of shortages",negative,Cyber/Operational,news
+E085,"Is the app down for anyone else? Can't log in, can't trade. This is unacceptable.",negative,Cyber/Operational,social
+E086,"Exchange schedules planned maintenance for Saturday night",neutral,Cyber/Operational,news
+E087,"Hackers breach exchange's hot wallet and drain $300m in digital assets",negative,Cyber/Operational,news
+E088,"Rail strike disrupts freight across the country, shipments delayed",negative,Cyber/Operational,news
+E089,"Company thwarts attempted cyber attack, says operations unaffected",positive,Cyber/Operational,news
+E090,"Company appoints new chief financial officer effective January",neutral,Other,news
+E091,"Firm named best employer in the sector for the third year running",positive,Other,news
+E092,"Annual general meeting scheduled for November 12",neutral,Other,news
+E093,"Chief executive steps down abruptly citing personal reasons, shares fall",negative,Other,news
+E094,"Anyone watching the match tonight? Taking a break from the charts.",neutral,Other,social
+E095,"Company announces $5bn share buyback programme",positive,Other,news
+E096,"Index provider announces quarterly rebalance of its benchmark",neutral,Other,news
+E097,"Company announces 3,000 job cuts as part of cost-cutting plan",negative,Other,news
+E098,"Honestly sick of this market. Down again, no idea what the point of all this is.",negative,Other,social
+E099,"Firm raises its dividend by 10% after steady cash generation",positive,Other,news
+E100,"Analyst initiates coverage with a hold rating and a $120 price target",neutral,Other,news
+E101,"Broker downgrades the stock to underperform on valuation concerns",negative,Other,news
+E102,"Results were not as bad as feared, shares rebound",positive,Earnings,news
+E103,"Not a single bank missed its capital target in this year's stress exercise",positive,Regulatory/Legal,news
