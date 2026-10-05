@@ -5,7 +5,7 @@
 **College email:** poojari.2024ug1099@iiitranchi.ac.in
 **Deadline:** Saturday 10 October 2026 (submit by Fri 9 Oct for safety margin)
 **Team size:** 1 (individual submission only)
-**Status:** v1 draft, written 3 Oct 2026
+**Status:** v2, refreshed 4 Oct 2026. Implementation, tests, dashboard, evaluation script, README draft and architecture diagram are in place. Hand-labeled evaluation set, measured results, deck and video are pending.
 
 > The repo is public, so only the college email is listed here. Do not put personal contact details in any committed file.
 
@@ -39,8 +39,8 @@ One dashboard shows both modules. The demo follows one story: a geopolitical sho
 
 | Requirement | Source | How we satisfy it |
 |---|---|---|
-| Public GitHub repo, named `<college>-<name>-hackathon` | Guidelines | `iiitranchi-medhansh-poojari-hackathon` (confirm exact format) |
-| Repo layout: `README.md`, `requirements.txt`, `LICENSE` (MIT), `src/`, `data/`, `docs/presentation.pdf`, `docs/architecture.png` | Guidelines | Restructure prototype into `src/` (currently a root `riskengine/` package) |
+| Public GitHub repo, named `<college>-<name>-hackathon` | Guidelines | `iiitranchi-medhansh-poojari-hackathon` (decided) |
+| Repo layout: `README.md`, `requirements.txt`, `LICENSE` (MIT), `src/`, `data/`, `docs/presentation.pdf`, `docs/architecture.png` | Guidelines | Done: code lives under `src/`, run with `python -m src.app`. README and diagram drafted; deck PDF still to add |
 | README must follow the mandatory template (title, candidate info, overview, architecture, dataset, quickstart, results) | Guidelines | Fill the template verbatim, see section 13 |
 | Exact run command in README Quickstart | Guidelines | One command, e.g. `python -m src.app` |
 | Deck of 5-7 slides, PDF in `docs/`, link in README | Guidelines + case study | Section 14 |
@@ -75,7 +75,7 @@ One dashboard shows both modules. The demo follows one story: a geopolitical sho
 
 Data flow: sources produce `RawItem`; the engine produces `Signal` records (written to `data/signals.jsonl` and served over `/api/signals`); the modules consume signals; the dashboard calls the API.
 
-**Stack:** Python 3.11+, Flask, standard library for XML/JSON/CSV, plain HTML and JavaScript canvas for charts. `unittest` for tests. Optional: a pretrained finance sentiment model as a stretch goal behind a feature flag.
+**Stack:** Python 3.11+, Flask, standard library for XML/JSON/CSV, a single-file HTML dashboard with vanilla JavaScript and inline SVG charts. `unittest` for tests. Optional: a pretrained finance sentiment model as a stretch goal behind a feature flag.
 
 ## 6. Functional requirements
 
@@ -148,7 +148,8 @@ One page with: signal feed with sentiment/impact, source and event mix, Module A
 | `data/sample_news.jsonl` | 24 synthetic news headlines across one trading day | Written by us, **synthetic** (generator: `scripts/make_sample_data.py`) |
 | `data/sample_social.jsonl` | 29 synthetic social posts with likes/retweets | Written by us, **synthetic**, mimics X/Reddit style |
 | `data/sample_portfolio.csv` | 25 synthetic positions, about $1.27B market value | Written by us, **synthetic** (counterparty names are fictional) |
-| `data/labeled_eval.csv` | 50-100 headlines hand-labeled by the candidate with sentiment and event type | **To be created by the candidate** |
+| `data/labeled_eval.csv` | 80-100 headlines hand-written and hand-labeled by the candidate with sentiment and event type | **To be created by the candidate** |
+| `docs/evaluation_results.md` | Accuracy, macro-F1 and error analysis from `python -m src.evaluate` | Generated from the labeled file |
 | `data/signals.jsonl` | Engine output | Generated |
 
 Rules:
@@ -215,38 +216,44 @@ Targets below are goals to aim for, not results. Report what you actually measur
 
 The "results" slide should show the measured accuracy table, a before/after stress chart and a weights-over-time chart. Frame results as a demonstration on synthetic data.
 
-## 11. Current prototype status (honest snapshot)
-
-Location in the sandbox: `/home/claude/risk-engine`. Not a git repo yet.
+## 11. Current project status (honest snapshot, 4 Oct 2026)
 
 | Part | State |
 |---|---|
-| Lexicon, NLP analysis, ingestion, pipeline | Written and run; produced 53 signals (24 news, 29 social) with sensible output |
-| Rebalancer | Written and run; weights sum to 1, bounds respected |
-| Stress tester + portfolio | Written and run; derivative sign errors found and fixed |
-| `app.py` (Flask API) | Written, **not yet run** |
-| `templates/dashboard.html` | **Not written** |
-| Unit tests, `requirements.txt`, `LICENSE`, README, architecture diagram, deck | **Not started** |
-| Live RSS / Reddit fetch | **Untested** (no network in the sandbox); fallback exists |
-| Evaluation set and measured metrics | **Not started** |
-| Layout vs. required `src/` structure | Needs restructuring |
+| NLP Risk Engine (lexicon, analysis, ingestion, pipeline) | Built and tested; 53 sample signals (24 news, 29 social) with sensible output |
+| Module A: rebalancer | Built and tested; weights sum to 1 and respect the 2%-15% bounds |
+| Module B: stress tester and portfolio | Built and tested; positions hand-checked against the code, derivative signs verified |
+| Flask API | Built; every endpoint exercised, including bad-input cases |
+| Dashboard (`src/templates/dashboard.html`) | Built: KPIs, signal feed, Module A chart with slider, Module B stress view, live analyze box |
+| Unit tests | 117 tests passing at the last run, offline, no data file modified |
+| Evaluation script (`src/evaluate.py`) | Built and tested on synthetic data; **needs the hand-labeled file to produce real numbers** |
+| Git history | Repository initialised with 10 staged commits; fresh-clone test passed |
+| Live RSS fetch | Works (returns live headlines, which are noisy). Reddit's public endpoint returned HTTP 403, so the demo's social source is the simulated sample file |
+| README and architecture diagram | Drafted; evaluation numbers and video link still to fill |
+| Hand-labeled evaluation set and measured metrics | **Not done** |
+| Deck (PDF), demo video, final submission | **Not done** |
 
-Known cleanups: remove leftover logic noise in the rebalancer, add edge-case tests, confirm Python version compatibility on your machine.
+**Known limitations to disclose (not hidden):**
+- Analyst "downgrade" headlines can be mislabeled as Credit Events (a credit-rating downgrade and an analyst stock downgrade are different things).
+- Double negatives ("not extremely weak") flip to positive; sarcasm is not detected.
+- Entity linking can false-positive on sentences that start with "Apple" the fruit.
+- Intensifier vocabulary is small (for example, "absolutely" is not covered); any lexicon change must be measured on the dev split first.
+- Stress shocks are illustrative, not regulator-calibrated; loans are marked to market rather than held at cost.
 
-## 12. Work plan (7 days)
+## 12. Work plan (to the 10 Oct deadline)
 
-| Date | Work | Done by |
-|---|---|---|
-| Sat 3 Oct | Agree this PRD; set up GitHub repo, MIT license, first commit; install Python and run the prototype | You |
-| Sun 4 Oct | Move code into `src/`; write `requirements.txt`; run and fix `app.py`; unit tests for NLP, rebalancer, stress | Agent, you review |
-| Mon 5 Oct | Build dashboard (weights chart, stress before/after, signal feed, live analyze box) | Agent, you review |
-| Tue 6 Oct | Label 50-100 headlines; run evaluation vs. baseline; tune lexicon if clearly warranted | **You** label, agent computes metrics |
-| Wed 7 Oct | README (full template), architecture diagram PNG, deck draft | Both |
-| Thu 8 Oct | Finish deck PDF; rehearse; record video; upload as YouTube unlisted; test in incognito | **You** |
-| Fri 9 Oct | Fresh-clone test on a clean folder; check all links; submit via the official form | **You** |
-| Sat 10 Oct | Buffer only | |
+| Date | Work | Done by | Status |
+|---|---|---|---|
+| Sat 3 Oct | PRD agreed; audit of the prototype; first bug fixes | Both | Done |
+| Sun 4 Oct | Restructure into `src/`, tests, dashboard, evaluation script, git history, README draft, architecture diagram; push to a public GitHub repo | Agent + you review | Mostly done; push and labeling remain |
+| Mon 5 Oct | Finish labeling 80-100 headlines; run the evaluation; tune only on the dev split; commit each real change | **You** label, agent computes | Pending |
+| Tue 6 Oct | Freeze evaluation results; fill README numbers; final PRD pass | Both | Pending |
+| Wed 7 Oct | Deck draft (5-7 slides, PDF in `docs/`); rehearse the demo twice | Both | Pending |
+| Thu 8 Oct | Record the demo (4-5 min), upload to YouTube as unlisted, test in incognito, add link to README | **You** | Pending |
+| Fri 9 Oct | Fresh-clone test, check all links in incognito, submit through the official form | **You** | Pending |
+| Sat 10 Oct | Buffer only | | |
 
-Commit after each task with a clear message so history shows the build.
+Commit after each real change with a clear message so the history shows genuine progress.
 
 ## 13. README checklist (mandatory template)
 
@@ -295,11 +302,11 @@ Prepare short, honest answers to:
 
 ## 18. Open questions
 
-1. **Q1:** Exact repo name format and whether the organizers will accept the college prefix as written.
-2. **Q2:** Are the organizers' open-source dataset list and "provided sample transaction data" available anywhere?
-3. **Q3:** Is there a scoring rubric beyond Domain Understanding and Presentation?
-4. **Q4:** Candidate's Python version and OS, for the README "tested on" line.
-5. **Q5:** Is the video limit 5 or 10 minutes?
+1. **Q1 (resolved):** Repo name is `iiitranchi-medhansh-poojari-hackathon`, following the `<college>-<candidate-name>-hackathon` convention.
+2. **Q2 (open):** Are the organizers' open-source dataset list and "provided sample transaction data" available anywhere? The portfolio is synthetic until they reply.
+3. **Q3 (open):** Is there a scoring rubric beyond Domain Understanding and Presentation?
+4. **Q4 (resolved):** Python 3.14.2 on Windows (PowerShell).
+5. **Q5 (open):** Is the video limit 5 or 10 minutes? Recording 4-5 minutes satisfies both documents.
 
 ## 19. Final submission checklist
 
