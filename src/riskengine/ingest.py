@@ -114,23 +114,27 @@ class RedditSource:
                 )
 
 
-def _safe(source, fallback: FileSource) -> list[RawItem]:
+def _safe(source, fallback: FileSource) -> tuple[list[RawItem], str]:
     try:
         items = list(source.fetch())
         if items:
-            return items
+            return items, "live"
         log.warning("%s returned nothing; using sample data", type(source).__name__)
     except Exception as e:  # network blocked, rate limited, schema change...
         log.warning("%s failed (%s); using sample data", type(source).__name__, e)
-    return list(fallback.fetch())
+    return list(fallback.fetch()), "sample"
 
 
-def gather(live: bool = False) -> list[RawItem]:
+def gather(live: bool = False) -> tuple[list[RawItem], dict[str, str]]:
     """Collect items from >= 2 sources (news + social), sorted by time."""
     news_sample = FileSource(DATA_DIR / "sample_news.jsonl", "news")
     social_sample = FileSource(DATA_DIR / "sample_social.jsonl", "social")
     if live:
-        items = _safe(RSSSource(), news_sample) + _safe(RedditSource(), social_sample)
+        n_items, n_prov = _safe(RSSSource(), news_sample)
+        s_items, s_prov = _safe(RedditSource(), social_sample)
+        items = n_items + s_items
+        prov = {"news": n_prov, "social": s_prov}
     else:
         items = list(news_sample.fetch()) + list(social_sample.fetch())
-    return sorted(items, key=lambda x: x.ts)
+        prov = {"news": "sample", "social": "sample"}
+    return sorted(items, key=lambda x: x.ts), prov

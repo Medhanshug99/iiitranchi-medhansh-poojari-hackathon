@@ -74,7 +74,7 @@ All data in this repository is **synthetic or hand-written by the author**. No p
 
 **Assumptions and honest limitations of the data**
 - The sample day is a **scripted story** (a geopolitical shock, then a credit event) so the demo shows the full pipeline. It is not a record of real events and says nothing about real market behaviour.
-- The engine can also fetch **live headlines** from public RSS feeds (Google News, Yahoo Finance) with `--live`. A live run overwrites `data/signals.jsonl` with the fetched items, so restore the file (`git checkout data/signals.jsonl`) rather than committing live headlines. Live data is also noisier than the sample data. Reddit's public endpoint blocked automated requests during testing, so the "social" source in the demo is the simulated sample file. The code falls back to the sample files automatically.
+- The engine can also fetch **live headlines** from public RSS feeds (Google News, Yahoo Finance) with `--live`. A live run overwrites `data/signals.jsonl` with the fetched items, so restore the file (`git checkout data/signals.jsonl`) rather than committing live headlines. Live data is also noisier than the sample data. Reddit's public endpoint blocked automated requests during testing, so the "social" source in the demo is the simulated sample file. The code falls back to the sample files automatically, and the API and dashboard truthfully report the data provenance.
 - Stress-test shocks and portfolio sensitivities (duration, spread duration, PD, LGD, DV01, CS01) are **illustrative**, chosen to be plausible, and not calibrated to a regulator's scenario.
 
 ## 4. Quickstart & Installation

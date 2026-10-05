@@ -57,10 +57,11 @@ def load_signals(path: Path = SIGNALS_PATH) -> list[dict]:
         return [json.loads(line) for line in f if line.strip()]
 
 
-def run(live: bool = False, path: Path = SIGNALS_PATH) -> list[Signal]:
-    signals = build_signals(gather(live=live))
+def run(live: bool = False, path: Path = SIGNALS_PATH) -> tuple[list[Signal], dict[str, str]]:
+    items, prov = gather(live=live)
+    signals = build_signals(items)
     write_signals(signals, path)
-    return signals
+    return signals, prov
 
 
 if __name__ == "__main__":
@@ -69,7 +70,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Run the NLP risk engine and write signals.jsonl")
     ap.add_argument("--live", action="store_true", help="fetch live RSS/Reddit (falls back to samples)")
     args = ap.parse_args()
-    sigs = run(live=args.live)
+    sigs, prov = run(live=args.live)
     print(f"wrote {len(sigs)} signals -> {SIGNALS_PATH}")
     for s in sigs[:8]:
         print(f"{s.ts[11:16]} {s.source_type:6} {s.event_type:20} sent={s.sentiment:+.2f} impact={s.impact:4.1f} {s.entities} | {s.text[:60]}")

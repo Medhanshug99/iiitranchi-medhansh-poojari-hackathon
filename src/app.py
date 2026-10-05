@@ -18,12 +18,15 @@ from src.riskengine.stress import (
 )
 
 app = Flask(__name__)
-STATE: dict = {"signals": [], "live": False}
+STATE: dict = {"signals": [], "live": False, "live_requested": False, "sources": {"news": "sample", "social": "sample"}}
 
 
 def refresh(live: bool = False):
-    STATE["signals"] = [s.to_dict() for s in pipeline.run(live=live)]
-    STATE["live"] = live
+    sigs, prov = pipeline.run(live=live)
+    STATE["signals"] = [s.to_dict() for s in sigs]
+    STATE["live_requested"] = live
+    STATE["sources"] = prov
+    STATE["live"] = any(v == "live" for v in prov.values())
 
 
 @app.get("/")
@@ -104,6 +107,8 @@ def api_summary():
         "avg_sentiment": round(sum(s["sentiment"] for s in sigs) / max(len(sigs), 1), 3),
         "high_impact": sum(1 for s in sigs if s["impact"] > DEFAULT_TRIGGER),
         "live": STATE["live"],
+        "live_requested": STATE["live_requested"],
+        "sources": STATE["sources"],
     })
 
 

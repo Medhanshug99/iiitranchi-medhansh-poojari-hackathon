@@ -371,7 +371,10 @@ function populateUI() {
   
   // KPIs
   const s = globalData.summary;
-  $('liveBadge').innerText = s.live ? 'Live Data' : 'Sample Data';
+  let modeText = 'Sample Data';
+  if (s.live) modeText = `Live Data (News: ${s.sources.news}, Social: ${s.sources.social})`;
+  else if (s.live_requested) modeText = 'Live Failed (Fallback to Sample)';
+  $('liveBadge').innerText = modeText;
   $('liveBadge').className = `badge ${s.live ? 'live' : ''}`;
   $('kpiTotal').innerText = s.total || 0;
   $('kpiSources').innerText = `${s.by_source.news || 0} / ${s.by_source.social || 0}`;
