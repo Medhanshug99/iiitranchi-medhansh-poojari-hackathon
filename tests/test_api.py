@@ -23,7 +23,7 @@ def _seed_state():
     import tempfile, json
     from pathlib import Path
 
-    items = gather(live=False)
+    items, prov = gather(live=False)
     signals = build_signals(items)
     # Write to a temp file instead of data/signals.jsonl
     tmpf = tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False, mode="w", encoding="utf-8")
@@ -206,6 +206,93 @@ class TestAPIBasic(unittest.TestCase):
         body = json.loads(r.data)
         for name in SCENARIOS:
             self.assertIn(name, body, f"Scenario '{name}' missing from /api/scenarios")
+
+
+class TestLiveState(unittest.TestCase):
+
+    def setUp(self):
+        from src.app import STATE
+        # Reset state
+        STATE["signals"] = []
+        STATE["live"] = False
+        STATE["live_requested"] = False
+        STATE["sources"] = {"news": "sample", "social": "sample"}
+
+        # Patch pipeline.run to avoid writing to data/signals.jsonl
+        import tempfile
+        from pathlib import Path
+        import src.app as app_module
+
+        self.tmpf = tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False)
+        self.tmppath = Path(self.tmpf.name)
+        self.tmpf.close()
+
+        self.orig_run = app_module.pipeline.run
+        def patched_run(live=False, path=None):
+            return self.orig_run(live=live, path=self.tmppath)
+        
+        self.patcher = mock.patch.object(app_module.pipeline, "run", side_effect=patched_run)
+        self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
+        self.tmppath.unlink(missing_ok=True)
+
+    def test_live_network_fails(self):
+        """Live requested but the network fetch raises or times out: live is false, live_requested is true, sources are 'sample'."""
+        from src.app import refresh, STATE
+        import src.riskengine.ingest as ingest_mod
+
+        with mock.patch.object(ingest_mod, "_http_get", side_effect=OSError("network down")):
+            refresh(live=True)
+        
+        self.assertFalse(STATE["live"])
+        self.assertTrue(STATE["live_requested"])
+        self.assertEqual(STATE["sources"], {"news": "sample", "social": "sample"})
+
+    def test_live_network_succeeds(self):
+        """Live requested and fetch succeeds: live is true and sources show 'live'."""
+        from src.app import refresh, STATE
+        import src.riskengine.ingest as ingest_mod
+
+        def fake_get(url, timeout=8):
+            if "reddit" in url:
+                return b'{"data":{"children":[{"data":{"id":"1","created_utc":1600000000,"title":"test","selftext":"txt","ups":1,"num_comments":1}}]}}'
+            else:
+                return b'<rss><channel><item><title>A</title><description>B</description><pubDate>Mon, 01 Jan 2000 00:00:00 GMT</pubDate><guid>1</guid></item></channel></rss>'
+
+        with mock.patch.object(ingest_mod, "_http_get", side_effect=fake_get):
+            refresh(live=True)
+        
+        self.assertTrue(STATE["live"])
+        self.assertTrue(STATE["live_requested"])
+        self.assertEqual(STATE["sources"], {"news": "live", "social": "live"})
+
+    def test_live_mixed_case(self):
+        """Mixed case: news live, social fell back: live is true, sources are {"news":"live","social":"sample"}."""
+        from src.app import refresh, STATE
+        import src.riskengine.ingest as ingest_mod
+
+        def fake_get(url, timeout=8):
+            if "reddit" in url:
+                raise OSError("reddit down")
+            else:
+                return b'<rss><channel><item><title>A</title><description>B</description><pubDate>Mon, 01 Jan 2000 00:00:00 GMT</pubDate><guid>1</guid></item></channel></rss>'
+
+        with mock.patch.object(ingest_mod, "_http_get", side_effect=fake_get):
+            refresh(live=True)
+        
+        self.assertTrue(STATE["live"])
+        self.assertTrue(STATE["live_requested"])
+        self.assertEqual(STATE["sources"], {"news": "live", "social": "sample"})
+
+    def test_live_not_requested(self):
+        """Live not requested: live false, live_requested false."""
+        from src.app import refresh, STATE
+        refresh(live=False)
+        self.assertFalse(STATE["live"])
+        self.assertFalse(STATE["live_requested"])
+        self.assertEqual(STATE["sources"], {"news": "sample", "social": "sample"})
 
 
 if __name__ == "__main__":

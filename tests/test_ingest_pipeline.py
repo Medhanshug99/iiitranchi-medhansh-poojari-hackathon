@@ -55,7 +55,7 @@ class TestGatherFallback(unittest.TestCase):
 
         with mock.patch.object(ingest_mod, "_http_get", side_effect=OSError("blocked")):
             from src.riskengine.ingest import gather
-            items = gather(live=True)
+            items, prov = gather(live=True)
 
         # Should get the same total as offline: 24 news + 29 social = 53
         self.assertEqual(len(items), 53,
@@ -73,7 +73,7 @@ class TestPipelineOutput(unittest.TestCase):
         from src.riskengine.pipeline import build_signals, write_signals
         from src.riskengine.ingest import gather
 
-        items = gather(live=False)
+        items, prov = gather(live=False)
         cls.signals = build_signals(items)
 
         cls.tmpfile = tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False)
