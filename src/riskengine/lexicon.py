@@ -20,6 +20,8 @@ POSITIVE = {
     "launches": 1, "unveils": 1.5, "unveiled": 1.5, "resilient": 1.5, "upside": 1.5,
     "buy": 1.5, "love": 1.5, "great": 1.5, "amazing": 2, "winning": 1.5, "moon": 2,
     "calm": 1, "eases": 1.5, "ceasefire": 2, "deal": 1, "agreement": 1.5, "relief": 1.5,
+    # (e) context words that help flip meaning — added for normalization
+    "impressive": 2.0,
 }
 
 NEGATIVE = {
@@ -39,16 +41,26 @@ NEGATIVE = {
     "collapses": -3, "collapsed": -3, "crisis": -2.5, "bailout": -2.5, "downturn": -2,
     "recession": -2.5, "inflation": -1, "shortage": -1.5, "strike": -1.5, "drop": -1.5,
     "drops": -1.5, "fell": -1.5, "falls": -1.5, "fall": -1.5, "sink": -2, "sinks": -2,
-    "slides": -1.5, "worst": -2, "risk": -1, "risks": -1, "threat": -2, "threatens": -2,
-    "tensions": -1.5, "escalate": -2, "escalates": -2, "escalation": -2, "sell": -1.5,
-    "bubble": -1.5, "terrible": -2, "scam": -3, "rekt": -2.5, "dump": -2, "dumping": -2,
-    "concern": -1, "concerns": -1, "outage": -2, "blackout": -2, "turmoil": -2.5,
-    "stubborn": -1.5, "hotter": -1.5, "sticky": -1.5, "disaster": -2.5, "worried": -1.5,
-    "worry": -1.5, "bleeding": -2, "stagnant": -1.5, "headache": -1.5,
+    "slides": -1.5, "worst": -2, "risk": -1, "risks": -1, "threat": -2, "threatens": -3,
+    "threaten": -3, "tensions": -1.5, "escalate": -2, "escalates": -2, "escalation": -2,
+    "sell": -1.5, "bubble": -1.5, "terrible": -2, "scam": -3, "rekt": -2.5, "dump": -2,
+    "dumping": -2, "concern": -1, "concerns": -1, "outage": -2, "blackout": -2,
+    "turmoil": -2.5, "stubborn": -1.5, "hotter": -1.5, "sticky": -1.5, "disaster": -2.5,
+    "worried": -1.5, "worry": -1.5, "bleeding": -2, "stagnant": -1.5, "headache": -1.5,
     "contagion": -3, "insolvency": -3, "insolvent": -3, "writedown": -2, "write-down": -2,
+    # Change (d): add disappoint family and fines (verb form)
+    "disappoints": -2, "disappointing": -2, "lukewarm": -1.5,
+    "fines": -2,
 }
 
 LEXICON = {**POSITIVE, **NEGATIVE}
+
+# Phrase-level sentiment overrides (checked before token lookup).
+# Key: lowercase phrase (space-separated tokens as they appear in text).
+# Value: float weight on the same -3..+3 scale.
+PHRASE_SENTIMENT = {
+    "profit warning": -3.0,   # (d): "profit" +1.5 must not cancel "warning" -1.5
+}
 
 EMOJI = {"🚀": 2.5, "📈": 2, "💰": 1.5, "🔥": 1, "📉": -2, "💀": -2, "🩸": -2, "🚨": -1.5, "⚠️": -1}
 
@@ -57,6 +69,36 @@ INTENSIFIERS = {
     "very": 1.3, "extremely": 1.5, "massive": 1.4, "sharply": 1.4, "significantly": 1.3,
     "huge": 1.3, "major": 1.2, "severe": 1.4, "heavily": 1.3, "slightly": 0.7,
     "modestly": 0.7, "marginally": 0.6, "somewhat": 0.8,
+}
+
+# ---------------------------------------------------------------------------
+# (e) Context words that neutralise "attack"/"default" when the action is thwarted/averted.
+# ---------------------------------------------------------------------------
+# Words meaning "the bad thing was prevented" (appear BEFORE the negative word)
+AVERSION_CONTEXT = {
+    "default": {"averting", "avert", "averted", "avoid", "avoiding", "avoided", "prevented",
+                "preventing", "prevents"},
+    "attack":  {"thwart", "thwarts", "thwarted", "foil", "foiled", "repel", "repelled",
+                "repels", "counter", "countered"},
+}
+
+# ---------------------------------------------------------------------------
+# (f) Routine/neutral cues: if any of these phrases are found the raw score is
+# multiplied by NEUTRAL_SHRINK before the label is applied.
+# ---------------------------------------------------------------------------
+NEUTRAL_CUES = [
+    "in line with", "unchanged", "flat", "scheduled", "to report",
+    "will hold", "no change", "as expected", "in-line",
+]
+NEUTRAL_SHRINK = 0.3   # multiply raw sentiment magnitude when routine cue present
+
+# ---------------------------------------------------------------------------
+# (b) Context tokens that confirm a "downgrad" match is really about credit/debt.
+# Without at least one of these, the Credit Event rule should not fire on "downgrad".
+# ---------------------------------------------------------------------------
+CREDIT_DOWNGRADE_CONTEXT = {
+    "rating", "rated", "debt", "bond", "bonds", "notes", "sovereign", "credit",
+    "outlook", "junk", "investment", "grade", "moody", "fitch", "s&p",
 }
 
 # ---------------------------------------------------------------------------
@@ -69,6 +111,12 @@ EVENT_RULES = {
         (r"\bembargo", 3), (r"\btariffs?\b", 2), (r"\bcoup\b", 3), (r"\bterror", 3),
         (r"\bstrait\b|\bborder\b", 1.5), (r"\bgeopolitic", 3), (r"\bnato\b|\bopec\b", 2),
         (r"\btrade war", 3), (r"\bblockade", 3),
+        # (c) expansions — general newswire vocabulary for geopolitics
+        (r"\battacks?\b", 2.5), (r"\bstrikes?\b", 2.5), (r"\bclash(es)?\b", 2.5),
+        (r"\btruce\b", 2.5), (r"\bsummit\b", 2), (r"\bministe(r|rs|rial)\b", 1.5),
+        (r"\btroops?\b", 2.5), (r"\bnuclear\b", 2.5), (r"\brefuge(e|es)?\b", 1.5),
+        (r"\bdiplo(mat|macy|matic)\b", 1.5), (r"\bsanction(s|ed)?\b", 2.5),
+        (r"\btrade truce\b", 3), (r"\btrade (deal|pact)\b", 2),
     ],
     "Macroeconomic": [
         (r"\binflation|\bcpi\b", 3), (r"\binterest rates?\b|\brate (hike|cut)s?\b", 3),
@@ -76,37 +124,81 @@ EVENT_RULES = {
         (r"\brecession", 3), (r"\bunemployment|\bjobs report|\bpayrolls", 2.5),
         (r"\byield curve|\btreasury yields?", 2.5), (r"\bpmi\b", 2), (r"\bstagflation", 3),
         (r"\bbasis points?\b|\bbps\b", 1.5), (r"\bconsumer (spending|confidence)", 2),
+        # (c) expansions — standard newswire macro vocabulary
+        (r"\bretail sales\b", 2.5), (r"\btreasury auction\b", 2.5),
+        (r"\bmortgage rates?\b", 2.5), (r"\btightening\b", 2),
+        (r"\brate hike(s)?\b|\brate cut(s)?\b", 3),
+        (r"\bond yields?\b|\b10-year\b|\b10 year\b", 2),
+        (r"\bpayrolls?\b", 2.5), (r"\bfomc\b", 3), (r"\bhiking\b|\bhawkish\b|\bdovish\b", 2),
+        (r"\byields?\b", 1.5),
     ],
     "Credit Event": [
         (r"\bdefault", 3.5), (r"\bbankrupt", 3.5), (r"\bchapter 11\b", 3.5),
-        (r"\bdowngrad", 2.5), (r"\bcredit rating|\bmoody|\bs&p global ratings|\bfitch", 2),
+        # (b) "downgrad" only fires here when debt/rating context is present — enforced in classify_event
+        (r"\bdowngrad", 2.5),
+        (r"\bcredit rating|\bmoody|\bs&p global ratings|\bfitch", 2),
         (r"\binsolven", 3.5), (r"\bbailout", 3), (r"\bdebt restructuring|\brestructur", 2.5),
         (r"\bcredit spreads?\b|\bcds\b", 2.5), (r"\bbank run|\bliquidity (crisis|crunch)", 3.5),
         (r"\bnon-performing|\bloan losses|\bwrite-?downs?", 2.5), (r"\bcovenant", 2),
+        # (c) expansions — rating agency announcements and bond issuance
+        (r"\brating agency\b|\brating (upgrade|downgrade|affirm|affirmation)\b", 2.5),
+        (r"\bupgrade[sd]?\b.*\b(debt|bonds?|notes?|rating)\b", 2),
+        (r"\binvestment.?grade\b|\bjunk\b|\bsenior notes?\b", 2.5),
+        (r"\bcontagion\b", 3), (r"\bcredit\b", 1.5),
     ],
     "Merger/Acquisition": [
         (r"\bacquir", 3), (r"\bacquisition", 3), (r"\bmerger|\bmerge\b|\bmerges\b", 3),
         (r"\btakeover", 3), (r"\bbuyout", 3), (r"\bbid for\b|\bdeal to buy", 2.5),
         (r"\bto buy\b.*\b(billion|million)", 2), (r"\bdivest|\bspin-?off", 2),
+        # (c) expansions — general M&A vocabulary
+        (r"\bstrategic alternatives?\b", 2.5), (r"\bpossible sale\b|\bpotential sale\b", 2.5),
+        (r"\btakeover premium\b|\bpremium (to|for) (acquire|buy|take)\b", 2.5),
+        (r"\bprivate equity\b|\blbo\b", 2), (r"\bgo private\b|\btake.*private\b", 2.5),
+        (r"\bshareholders? (approve|vote)\b", 2),
     ],
     "Product Launch": [
         (r"\blaunch", 3), (r"\bunveil", 3), (r"\bannounces? new", 2.5), (r"\brelease[sd]?\b", 1.5),
         (r"\bnew (iphone|model|chip|feature|product|service)", 3), (r"\brolls? out", 2.5),
         (r"\bintroduc", 2), (r"\bfda approv", 3), (r"\bbreakthrough", 1.5),
+        # (c) expansions — product debut vocabulary
+        (r"\bdebuts?\b", 3), (r"\bversion \d+\b", 2), (r"\bnew (tier|platform|tool)\b", 2.5),
+        (r"\bad.?supported tier\b", 2), (r"\bpre.?order\b", 1.5),
     ],
     "Earnings": [
         (r"\bearnings", 3), (r"\bquarterly results|\bq[1-4]\b", 2.5), (r"\brevenue", 2),
-        (r"\bguidance|\boutlook", 2.5), (r"\beps\b", 3), (r"\bbeats? (estimates|expectations|forecasts)", 3),
+        (r"\bguidance|\boutlook", 2.5), (r"\beps\b", 3),
+        (r"\bbeats? (estimates|expectations|forecasts)", 3),
         (r"\bmiss(es)? (estimates|expectations|forecasts)", 3), (r"\bprofit warning", 3),
+        # (c) expansions — broader earnings vocabulary
+        (r"\bannual (profit|loss|results|earnings)\b", 2.5),
+        (r"\bthird.?quarter results?\b|\bsecond.?quarter results?\b|\bfirst.?quarter results?\b", 2.5),
+        (r"\bquarterly (loss|profit|income)\b", 2.5),
+        (r"\bforecast(s)?\b|\bfull.?year\b", 2.5),
+        (r"\bprofit\b", 1.5), (r"\bloss\b", 1.5),
+        (r"\bto report\b.*\b(results|earnings|quarter)\b", 2.5),
+        (r"\bresults\b", 1.5),
     ],
     "Regulatory/Legal": [
-        (r"\blawsuit|\bsued?\b|\bsettlement", 3), (r"\bantitrust", 3.5), (r"\bsec\b|\bdoj\b|\bftc\b", 2.5),
-        (r"\bregulator|\bregulation|\bfined?\b", 2.5), (r"\binvestigation|\bprobe\b", 3),
-        (r"\bsubpoena|\bindict", 3), (r"\bcompliance|\bfraud", 2.5),
+        (r"\blawsuit|\bsued?\b|\bsettlement", 3), (r"\bantitrust", 3.5),
+        (r"\bsec\b|\bdoj\b|\bftc\b", 2.5), (r"\bregulator|\bregulation|\bfined?\b", 2.5),
+        (r"\binvestigation|\bprobe\b", 3), (r"\bsubpoena|\bindict", 3),
+        (r"\bcompliance|\bfraud", 2.5),
+        # (c) expansions — standard legal/regulatory vocabulary
+        (r"\bfines\b|\bpenalt(y|ies)\b", 2.5), (r"\bverdict\b|\bruling\b", 2.5),
+        (r"\bhearing\b", 2), (r"\blicen(ce|se)\b", 2), (r"\bban\b", 2),
+        (r"\btax proposal\b|\bwindfall tax\b", 2.5), (r"\bappeal(s)?\b", 1.5),
+        (r"\bcourt\b", 2), (r"\bshort selling\b", 2),
+        (r"\bdata privacy\b|\bpatent\b", 2), (r"\bstress (test|exercise)\b", 2),
     ],
     "Cyber/Operational": [
         (r"\bcyber", 3.5), (r"\bbreach", 3), (r"\bransomware", 3.5), (r"\bhack", 3),
-        (r"\boutage", 3), (r"\brecall", 3), (r"\bsupply chain", 2.5), (r"\bfactory fire|\bstrike\b", 2),
+        (r"\boutage", 3), (r"\brecall", 3), (r"\bsupply chain", 2.5),
+        (r"\bfactory fire|\bstrike\b", 2),
+        # (c) expansions — operational disruption vocabulary
+        (r"\bmaintenance\b", 2), (r"\bunusual activity\b", 2.5),
+        (r"\bsystems? (down|restored|investigating)\b", 2.5),
+        (r"\bdata (lost|leaked|compromised)\b", 2.5),
+        (r"\bapp (down|unavailable)\b", 2), (r"\bstrike action\b", 2),
     ],
 }
 
