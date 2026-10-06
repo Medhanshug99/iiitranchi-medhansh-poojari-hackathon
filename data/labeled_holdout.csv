@@ -1,0 +1,46 @@
+id,text,sentiment,event_type,source_type
+H001,"Drone attack on refinery in the Red Sea corridor sends Brent above $95",negative,Geopolitical,news
+H002,"Defence ministers from NATO members convene in Brussels to review troop deployments",neutral,Geopolitical,news
+H003,"Peace talks yield breakthrough as rival factions agree to withdraw forces, oil slips",positive,Geopolitical,news
+H004,"Tensions flare as embargo on semiconductor exports widens, Asian chip stocks sink",negative,Geopolitical,news
+H005,"Thread: why the escalation near the strait should worry every oil trader today",negative,Geopolitical,social
+H006,"Producer prices surge 1.4% in September, far above forecasts, stoking fears the Fed will keep tightening",negative,Macroeconomic,news
+H007,"Euro zone growth beats expectations as services activity rebounds",positive,Macroeconomic,news
+H008,"Bank of Japan holds policy rate at 0.1%, no change to bond purchase schedule",neutral,Macroeconomic,news
+H009,"US jobless claims climb to highest since 2021, labour market cooling fast",negative,Macroeconomic,news
+H010,"CPI came in soft, yields are dropping, risk-on today. Finally some good macro news.",positive,Macroeconomic,social
+H011,"Rating agency cuts retailer's debt two notches to B-, bonds sell off",negative,Credit Event,news
+H012,"Lender halts withdrawals as depositors rush for exits; central bank weighs emergency backstop",negative,Credit Event,news
+H013,"Shipping firm refinances $1.5bn of maturing debt on favourable terms, easing liquidity worries",positive,Credit Event,news
+H014,"Company extends maturity of its revolving credit facility by two years",neutral,Credit Event,news
+H015,"Their bonds are trading at 60 cents. Restructuring is basically priced in at this point.",negative,Credit Event,social
+H016,"Pharma group to buy biotech for $6.5bn in cash, a 45% premium to last close",positive,Merger/Acquisition,news
+H017,"Takeover talks collapse after buyer cites due diligence concerns, target stock plunges",negative,Merger/Acquisition,news
+H018,"Board of the media company reviews unsolicited proposal from private investor",neutral,Merger/Acquisition,news
+H019,"Retailer finalises acquisition of rival chain, expects $200m annual cost savings",positive,Merger/Acquisition,news
+H020,"Rumours of a merger between the two lenders again. Not trading on it until there's a filing.",neutral,Merger/Acquisition,social
+H021,"Electric vehicle maker unveils longer-range battery pack, shares climb on strong order book",positive,Product Launch,news
+H022,"Rollout of new payments app stumbles as users report crashes, adoption lags forecast",negative,Product Launch,news
+H023,"Chip designer introduces new line of server processors, availability from January",neutral,Product Launch,news
+H024,"Social network debuts creator tools that analysts say could lift ad revenue",positive,Product Launch,news
+H025,"Just tried the new update from the app. Smoother and way faster. Good release.",positive,Product Launch,social
+H026,"Chip equipment maker's third-quarter net income jumps 38% on strong demand",positive,Earnings,news
+H027,"Airline posts surprise loss and trims capacity outlook as fuel costs bite",negative,Earnings,news
+H028,"Conglomerate says quarterly sales were broadly flat and confirms 2027 targets",neutral,Earnings,news
+H029,"Bank's net interest margin shrinks, earnings miss analyst consensus by 9%",negative,Earnings,news
+H030,"Profit down 20% and they still call it resilient. Not buying this guidance.",negative,Earnings,social
+H031,"Watchdog sues exchange operator for alleged market manipulation",negative,Regulatory/Legal,news
+H032,"Judge throws out shareholder suit against the carmaker, saying claims lacked merit",positive,Regulatory/Legal,news
+H033,"Finance ministry circulates draft rules on crypto custody for public comment",neutral,Regulatory/Legal,news
+H034,"Insurer ordered to pay $350m in settlement over mis-sold policies",negative,Regulatory/Legal,news
+H035,"New capital rules for banks are going to squeeze lending. Regulators love moving goalposts.",negative,Regulatory/Legal,social
+H036,"Hospital network hit by cyber attack, patient records inaccessible for third day",negative,Cyber/Operational,news
+H037,"Retailer says scheduled system upgrade will take online store offline for two hours Sunday",neutral,Cyber/Operational,news
+H038,"Refinery shutdown after pipeline leak cuts regional fuel supply",negative,Cyber/Operational,news
+H039,"Airline resumes full schedule after technology glitch is resolved",positive,Cyber/Operational,news
+H040,"Trading platform froze again during the open. Lost the entry because of their servers.",negative,Cyber/Operational,social
+H041,"Chairman to retire after 12 years, succession plan announced",neutral,Other,news
+H042,"Company authorises $2bn buyback and lifts quarterly payout",positive,Other,news
+H043,"Executive team shake-up as two senior officers resign amid internal review",negative,Other,news
+H044,"Stock added to benchmark index effective next month",neutral,Other,news
+H045,"Quiet session today. Volume is thin, waiting for tomorrow's data.",neutral,Other,social

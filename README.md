@@ -70,7 +70,7 @@ All data in this repository is **synthetic or hand-written by the author**. No p
 | `data/sample_social.jsonl` | 29 social posts in the style of X/Twitter and Reddit, with likes and retweets | Synthetic, written for the demo |
 | `data/sample_portfolio.csv` | 25 positions (loans, bonds, derivatives, equities), about $1,266.7M total market value, fictional counterparties | Synthetic |
 | `data/signals.jsonl` | Engine output generated from the files above | Generated |
-| `data/labeled_eval.csv` | Headlines hand-labeled by the author with sentiment and event type, used to evaluate the engine | Hand-written and hand-labeled (TODO: confirm row count after labeling) |
+| `data/labeled_eval.csv` | Headlines hand-labeled by the author with sentiment and event type, used to evaluate the engine | Hand-written and hand-labeled (103 main + 45 holdout) |
 
 **Assumptions and honest limitations of the data**
 - The sample day is a **scripted story** (a geopolitical shock, then a credit event) so the demo shows the full pipeline. It is not a record of real events and says nothing about real market behaviour.
@@ -123,12 +123,12 @@ Run commands from the repository root so that `python -m src.app` can find the p
 
 **Engine evaluation** on hand-labeled headlines (dev/test split, full tables in [docs/evaluation_results.md](docs/evaluation_results.md)):
 
-| Task | Engine (test split) | Best naive baseline |
-|---|---|---|
-| Sentiment accuracy | TODO | TODO |
-| Event-type accuracy | TODO | TODO |
+| Task | Baseline (majority) | Engine, test split before tuning | Engine, test split after tuning | Engine, fresh holdout |
+|---|---|---|---|---|
+| Sentiment accuracy | 0.447 | 0.655 | 0.741 | 0.689 |
+| Event-type accuracy | 0.126 | 0.810 | 0.966 | 0.533 |
 
-*(Fill these in from the real output of `python -m src.evaluate`. Do not estimate them.)*
+*(The test split was inspected at baseline so its post-tuning numbers are not independent.)*
 
 **Domain impact**
 - **Speed and coverage:** a risk team can screen far more text than a person can read, and see which items matter first through the impact score.

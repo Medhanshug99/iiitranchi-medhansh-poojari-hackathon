@@ -18,6 +18,7 @@ Design notes
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import hashlib
 import sys
@@ -184,7 +185,7 @@ def _build_report(split_name: str, rows: list[dict],
     lines.append(f"### {split_name} ({len(rows)} rows)\n")
 
     # ---------- sentiment ----------
-    lines.append("#### Sentiment\n")
+    lines.append(f"#### Sentiment ({len(rows)} rows)\n")
     lines.append(_md_table(
         ["Metric", "Engine", "Majority baseline", "Always-neutral baseline"],
         [
@@ -202,12 +203,12 @@ def _build_report(split_name: str, rows: list[dict],
          for lbl, v in pc_sent.items()]
     ))
     lines.append("")
-    lines.append("**Confusion matrix (sentiment)**\n")
+    lines.append(f"**Confusion matrix (sentiment, {len(rows)} rows)**\n")
     lines.append(_confusion_md(confusion_matrix(y_sent_true, y_sent_pred, sent_labels), sent_labels))
     lines.append("")
 
     # ---------- event type ----------
-    lines.append("#### Event Type\n")
+    lines.append(f"#### Event Type ({len(rows)} rows)\n")
     lines.append(_md_table(
         ["Metric", "Engine", "Majority baseline"],
         [
@@ -226,7 +227,7 @@ def _build_report(split_name: str, rows: list[dict],
          for lbl, v in pc_evt.items()]
     ))
     lines.append("")
-    lines.append("**Confusion matrix (event type)**\n")
+    lines.append(f"**Confusion matrix (event type, {len(rows)} rows)**\n")
     lines.append(_confusion_md(confusion_matrix(y_evt_true, y_evt_pred, present_evts), present_evts))
     lines.append("")
 
@@ -246,8 +247,8 @@ def _build_report(split_name: str, rows: list[dict],
     return lines
 
 
-def _error_analysis(test_rows: list[dict]) -> list[str]:
-    lines = ["### Error Analysis: TEST misclassifications\n"]
+def _error_analysis(test_rows: list[dict], title: str = "TEST") -> list[str]:
+    lines = [f"### Error Analysis: {title} misclassifications\n"]
     misses = [r for r in test_rows
               if r["sentiment"] != r["pred_sentiment"] or r["event_type"] != r["pred_event"]]
     misses.sort(key=lambda r: r["event_type"])
@@ -273,13 +274,20 @@ def _error_analysis(test_rows: list[dict]) -> list[str]:
 # Main
 # ---------------------------------------------------------------------------
 
-def main() -> int:
+def main(args=None) -> int:
+    parser = argparse.ArgumentParser(description="Evaluate NLP risk engine.")
+    parser.add_argument("--file", type=Path, default=LABELED_CSV,
+                        help="Path to labeled CSV file (default: data/labeled_eval.csv)")
+    parser.add_argument("--holdout", action="store_true",
+                        help="Run in holdout mode (no dev/test split, report all rows together)")
+    parsed_args = parser.parse_args(args)
+
     # ---- 1. File existence ----
-    if not LABELED_CSV.exists():
+    if not parsed_args.file.exists():
         msg = textwrap.dedent(f"""
             ERROR: labeled evaluation file not found.
 
-            Expected: {LABELED_CSV}
+            Expected: {parsed_args.file}
 
             Please create it as a CSV with these columns:
               id,text,sentiment,event_type,source_type[,impact_label]
@@ -298,7 +306,7 @@ def main() -> int:
         return 1
 
     # ---- 2. Load & validate ----
-    with open(LABELED_CSV, newline="", encoding="utf-8") as f:
+    with open(parsed_args.file, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         rows = list(reader)
         fieldnames = reader.fieldnames or []
@@ -334,7 +342,7 @@ def main() -> int:
     sent_counts = Counter(r["sentiment"]   for r in rows)
     evt_counts  = Counter(r["event_type"]  for r in rows)
 
-    print(f"Loaded {len(rows)} rows from {LABELED_CSV}")
+    print(f"Loaded {len(rows)} rows from {parsed_args.file}")
     print(f"Sentiment counts: {dict(sorted(sent_counts.items()))}")
     print(f"Event type counts: {dict(sorted(evt_counts.items()))}")
     if has_impact:
@@ -348,47 +356,58 @@ def main() -> int:
 
     print("Validation: OK\n")
 
-    # ---- 3. Split ----
-    dev_rows, test_rows = split_rows(rows)
-    print(f"Split: DEV={len(dev_rows)}, TEST={len(test_rows)} (stable hash(id)%2)\n")
-
-    # ---- 4. Run engine ----
+    # ---- 3. Run engine ----
     print("Running engine on all rows... ", end="", flush=True)
-    all_rows    = _run_engine(rows)
-    dev_pred    = [r for r in all_rows if r["id"] in {x["id"] for x in dev_rows}]
-    test_pred   = [r for r in all_rows if r["id"] in {x["id"] for x in test_rows}]
+    all_rows = _run_engine(rows)
     print("done.\n")
 
     sent_labels = sorted(VALID_SENTIMENTS)
     evt_labels  = sorted(VALID_EVENTS)
 
-    # ---- 5. Build report ----
+    # ---- 4. Build report ----
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    cmd = "python -m src.evaluate"
+    cmd_args = f" --file {parsed_args.file} --holdout" if parsed_args.holdout else ""
+    cmd = f"python -m src.evaluate{cmd_args}"
 
     report_lines: list[str] = [
         "# ShockWire NLP Engine – Evaluation Results\n",
         f"**Date:** {now}  ",
-        f"**Rows:** {len(rows)} total ({len(dev_rows)} dev / {len(test_rows)} test)  ",
-        f"**Command:** `{cmd}`  \n",
-        "> ⚠️ **Protocol:** Tune lexicon/rules on **DEV only**. "
-        "TEST numbers are the **final reported accuracy**. Never tune on TEST.\n",
-        "---\n",
     ]
-
-    for name, subset in [("DEV", dev_pred), ("TEST", test_pred), ("ALL", all_rows)]:
-        report_lines.extend(_build_report(name, subset, sent_labels, evt_labels))
+    
+    if parsed_args.holdout:
+        report_lines.append(f"**Rows:** {len(rows)} total (holdout)  ")
+        report_lines.append(f"**Command:** `{cmd}`  \n")
         report_lines.append("---\n")
-
-    report_lines.extend(_error_analysis(test_pred))
+        report_lines.extend(_build_report("HOLDOUT", all_rows, sent_labels, evt_labels))
+        report_lines.append("---\n")
+        report_lines.extend(_error_analysis(all_rows, "HOLDOUT"))
+    else:
+        dev_rows, test_rows = split_rows(rows)
+        print(f"Split: DEV={len(dev_rows)}, TEST={len(test_rows)} (stable hash(id)%2)\n")
+        dev_pred  = [r for r in all_rows if r["id"] in {x["id"] for x in dev_rows}]
+        test_pred = [r for r in all_rows if r["id"] in {x["id"] for x in test_rows}]
+        
+        report_lines.append(f"**Rows:** {len(rows)} total ({len(dev_rows)} dev / {len(test_rows)} test)  ")
+        report_lines.append(f"**Command:** `{cmd}`  \n")
+        report_lines.append("> ⚠️ **Protocol:** Tune lexicon/rules on **DEV only**. "
+                            "TEST numbers are the **final reported accuracy**. Never tune on TEST.\n")
+        report_lines.append("---\n")
+        for name, subset in [("DEV", dev_pred), ("TEST", test_pred), ("ALL", all_rows)]:
+            report_lines.extend(_build_report(name, subset, sent_labels, evt_labels))
+            report_lines.append("---\n")
+        report_lines.extend(_error_analysis(test_pred, "TEST"))
 
     report_text = "\n".join(report_lines)
 
-    # ---- 6. Write + print ----
-    RESULTS_MD.parent.mkdir(parents=True, exist_ok=True)
-    RESULTS_MD.write_text(report_text, encoding="utf-8")
+    # ---- 5. Write + print ----
+    # If not holdout, save to standard RESULTS_MD
+    if not parsed_args.holdout and parsed_args.file == LABELED_CSV:
+        RESULTS_MD.parent.mkdir(parents=True, exist_ok=True)
+        RESULTS_MD.write_text(report_text, encoding="utf-8")
+    
     print(report_text)
-    print(f"\nResults written to: {RESULTS_MD}")
+    if not parsed_args.holdout and parsed_args.file == LABELED_CSV:
+        print(f"\nResults written to: {RESULTS_MD}")
     return 0
 
 

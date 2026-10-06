@@ -189,7 +189,7 @@ class TestFileMissingError(unittest.TestCase):
         try:
             buf = io.StringIO()
             with redirect_stdout(buf):
-                code = ev.main()
+                code = ev.main([])
             output = buf.getvalue()
             self.assertEqual(code, 1)
             # Should mention the expected path and what columns to create
@@ -238,7 +238,7 @@ class TestEvaluateWithTempCSV(unittest.TestCase):
         try:
             buf = io.StringIO()
             with redirect_stdout(buf):
-                code = ev.main()
+                code = ev.main([])
             self.assertEqual(code, 0)
             output = buf.getvalue()
             # Core sections must appear in the output
@@ -266,7 +266,7 @@ class TestEvaluateWithTempCSV(unittest.TestCase):
         try:
             buf = io.StringIO()
             with redirect_stdout(buf):
-                code = ev.main()
+                code = ev.main([])
             self.assertEqual(code, 1)
             self.assertIn("INVALID", buf.getvalue())
         finally:
@@ -291,7 +291,7 @@ class TestEvaluateWithTempCSV(unittest.TestCase):
         try:
             buf = io.StringIO()
             with redirect_stdout(buf):
-                code = ev.main()
+                code = ev.main([])
             self.assertEqual(code, 1)
             self.assertIn("duplicate", buf.getvalue().lower())
         finally:
@@ -322,7 +322,7 @@ class TestEvaluateWithTempCSV(unittest.TestCase):
         try:
             buf = io.StringIO()
             with redirect_stdout(buf):
-                code = ev.main()
+                code = ev.main([])
             self.assertEqual(code, 0)
             self.assertIn("impact_label", buf.getvalue().lower())
         finally:
@@ -330,6 +330,57 @@ class TestEvaluateWithTempCSV(unittest.TestCase):
             ev.RESULTS_MD  = orig_md
             tmp.unlink(missing_ok=True)
             tmp_md.unlink(missing_ok=True)
+
+
+class TestEvaluateHoldoutMode(unittest.TestCase):
+    def _write_temp_csv(self, rows, fieldnames):
+        tmpf = tempfile.NamedTemporaryFile(
+            mode="w", suffix=".csv", delete=False, encoding="utf-8", newline=""
+        )
+        writer = csv.DictWriter(tmpf, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+        tmpf.close()
+        return Path(tmpf.name)
+
+    def test_holdout_mode(self):
+        """--holdout flag skips split and prints single HOLDOUT section."""
+        import src.evaluate as ev
+        import io
+        import sys
+        from contextlib import redirect_stdout
+        from unittest.mock import patch
+
+        rows = [
+            {"id": "h1", "text": "GDP strong unemployment down inflation fading",
+             "sentiment": "positive", "event_type": "Macroeconomic", "source_type": "news"},
+            {"id": "h2", "text": "missile strikes escalate military conflict sanctions",
+             "sentiment": "negative", "event_type": "Geopolitical", "source_type": "news"},
+        ]
+        tmp = self._write_temp_csv(rows, ["id","text","sentiment","event_type","source_type"])
+        
+        try:
+            buf = io.StringIO()
+            with patch.object(sys, "argv", ["evaluate.py", "--file", str(tmp), "--holdout"]):
+                with redirect_stdout(buf):
+                    code = ev.main()
+            self.assertEqual(code, 0)
+            output = buf.getvalue()
+            
+            # Should have HOLDOUT heading but NO DEV or TEST headings
+            self.assertIn("### HOLDOUT (2 rows)", output)
+            self.assertNotIn("DEV", output)
+            self.assertNotIn("TEST", output)
+            
+            # Should have headings with row counts
+            self.assertIn("#### Sentiment (2 rows)", output)
+            self.assertIn("#### Event Type (2 rows)", output)
+            self.assertIn("**Confusion matrix (sentiment, 2 rows)**", output)
+            self.assertIn("**Confusion matrix (event type, 2 rows)**", output)
+            self.assertIn("### Error Analysis: HOLDOUT misclassifications", output)
+            
+        finally:
+            tmp.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":
