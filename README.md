@@ -128,7 +128,7 @@ Run commands from the repository root so that `python -m src.app` can find the p
 | Sentiment accuracy | 0.447 | 0.655 | 0.741 | 0.689 |
 | Event-type accuracy | 0.126 | 0.810 | 0.966 | 0.533 |
 
-*(The test split was inspected at baseline so its post-tuning numbers are not independent.)*
+*(The test split was inspected at baseline and holdout #1 was used for Round 2 tuning, so their numbers are no longer independent. A second fresh holdout will provide the final independent estimate.)*
 
 **Domain impact**
 - **Speed and coverage:** a risk team can screen far more text than a person can read, and see which items matter first through the impact score.
