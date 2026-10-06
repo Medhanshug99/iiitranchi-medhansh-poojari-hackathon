@@ -27,7 +27,7 @@ NEWS = [
     (185, "wire-sample", "Exxon and Chevron shares jump as crude surges on supply disruption fears."),
     (200, "wire-sample", "Regional lender defaults on loan covenants; credit spreads widen sharply and contagion fears hit Bank of America, Goldman Sachs and JPMorgan."),
     (215, "wire-sample", "Goldman Sachs warns of mounting loan losses; ratings agencies weigh downgrade of regional banks."),
-    (235, "wire-sample", "Central bank signals emergency liquidity support to stabilise banking sector after sell-off."),
+    (235, "wire-sample", "Central bank springs surprise 75bp rate hike and warns of further tightening as inflation stays stubborn; bond yields surge and equities slide."),
     (255, "wire-sample", "Ceasefire talks ease tensions; oil falls from highs and stocks rebound in afternoon trade."),
     (270, "bizwire-sample", "Meta Platforms faces new EU investigation over data practices, shares fall."),
     (285, "wire-sample", "Alphabet unveils new Gemini model and launches enterprise agents; Google cloud demand strong."),
