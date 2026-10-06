@@ -7,7 +7,7 @@ from dataclasses import dataclass, field, asdict
 from typing import Optional
 
 from .lexicon import (
-    AVERSION_CONTEXT, CREDIT_DOWNGRADE_CONTEXT, EMOJI, EVENT_RULES, EVENT_SEVERITY,
+    AVERSION_CONTEXT, CREDIT_DOWNGRADE_CONTEXT, DIRECTION_FLIPS, EMOJI, EVENT_RULES, EVENT_SEVERITY,
     INTENSIFIERS, LEXICON, NEGATIONS, NEUTRAL_CUES, NEUTRAL_SHRINK,
     PHRASE_SENTIMENT, SEVERITY_BOOSTERS,
 )
@@ -191,6 +191,18 @@ def score_sentiment(text: str) -> tuple[float, list[str]]:
         # (e) Aversion context: skip this token's negative score if negated by aversion
         if base < 0 and _aversion_blocked(tokens, i, tok):
             continue
+        
+        # (h) Domain direction flips
+        for triggers, contexts, multiplier in DIRECTION_FLIPS:
+            if tok in triggers:
+                # check context window (whole sentence for safety or just +/- 5 tokens)
+                # the prompt specifies "attached to" so let's check the whole text string to be safe, 
+                # or a 5-token window around it. Let's use 5 token window.
+                window_flip = tokens[max(0, i - 5): i + 6]
+                if any(w in contexts for w in window_flip):
+                    base *= multiplier
+                    break
+
         mult = 1.0
         # (g) Negation window: 3 tokens (see docstring)
         window = tokens[max(0, i - 3): i]
@@ -238,8 +250,9 @@ def classify_event(text: str) -> tuple[str, float]:
     for event, rules in EVENT_RULES.items():
         scores[event] = sum(w for pat, w in rules if re.search(pat, lowered))
 
-    best, top = max(scores.items(), key=lambda kv: kv[1])
-    if top < 2.0:
+    # Tie break by severity
+    best, top = max(scores.items(), key=lambda kv: (kv[1], EVENT_SEVERITY.get(kv[0], 0)))
+    if top < 1.5:
         return "Other", 0.3
 
     # (b) Analyst-downgrade gate: Credit Event must not fire solely on "downgrad"
@@ -262,8 +275,8 @@ def classify_event(text: str) -> tuple[str, float]:
                 if not has_ctx:
                     # Suppress Credit Event — pick second-best or Other
                     alt_scores = {k: v for k, v in scores.items() if k != "Credit Event"}
-                    alt_best, alt_top = max(alt_scores.items(), key=lambda kv: kv[1])
-                    if alt_top < 2.0:
+                    alt_best, alt_top = max(alt_scores.items(), key=lambda kv: (kv[1], EVENT_SEVERITY.get(kv[0], 0)))
+                    if alt_top < 1.5:
                         return "Other", 0.3
                     total = sum(alt_scores.values())
                     return alt_best, round(alt_top / total, 2)

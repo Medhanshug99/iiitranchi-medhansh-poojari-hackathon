@@ -89,6 +89,7 @@ AVERSION_CONTEXT = {
 NEUTRAL_CUES = [
     "in line with", "unchanged", "flat", "scheduled", "to report",
     "will hold", "no change", "as expected", "in-line",
+    "consults", "convenes", "discussions", "minutes", "names", "appoints", "completes review"
 ]
 NEUTRAL_SHRINK = 0.3   # multiply raw sentiment magnitude when routine cue present
 
@@ -102,6 +103,23 @@ CREDIT_DOWNGRADE_CONTEXT = {
 }
 
 # ---------------------------------------------------------------------------
+# (h) Domain-direction flips for words whose sign depends on the object.
+# ---------------------------------------------------------------------------
+DIRECTION_FLIPS = [
+    ({"surge", "surges", "surged", "jump", "jumps", "jumped", "climb", "climbs", "climbed", "spike", "spikes", "spiked", "spiking"}, 
+     {"inflation", "yield", "yields", "claim", "claims", "cost", "costs", "loss", "losses", "default", "defaults", "price", "prices"}, 
+     -1.0),
+    ({"cut", "cuts", "slash", "slashes", "slashed"}, 
+     {"guidance", "forecast", "forecasts", "rating", "ratings"}, 
+     1.0),  # cut is already negative, we want it to stay negative or flip? Wait, cut is -1.5. So 1.0 keeps it negative.
+    # Ah, the prompt says: "cut/slash" are bad for guidance, forecasts, ratings (so keep negative)
+    # and good for costs, rates and inflation (flip to positive).
+    ({"cut", "cuts", "slash", "slashes", "slashed"}, 
+     {"cost", "costs", "rate", "rates", "inflation"}, 
+     -1.0), # Flips -1.5 to +1.5
+]
+
+# ---------------------------------------------------------------------------
 # Event classification. Each rule is (regex, weight); highest total wins.
 # ---------------------------------------------------------------------------
 EVENT_RULES = {
@@ -111,12 +129,13 @@ EVENT_RULES = {
         (r"\bembargo", 3), (r"\btariffs?\b", 2), (r"\bcoup\b", 3), (r"\bterror", 3),
         (r"\bstrait\b|\bborder\b", 1.5), (r"\bgeopolitic", 3), (r"\bnato\b|\bopec\b", 2),
         (r"\btrade war", 3), (r"\bblockade", 3),
-        # (c) expansions — general newswire vocabulary for geopolitics
         (r"\battacks?\b", 2.5), (r"\bstrikes?\b", 2.5), (r"\bclash(es)?\b", 2.5),
         (r"\btruce\b", 2.5), (r"\bsummit\b", 2), (r"\bministe(r|rs|rial)\b", 1.5),
         (r"\btroops?\b", 2.5), (r"\bnuclear\b", 2.5), (r"\brefuge(e|es)?\b", 1.5),
         (r"\bdiplo(mat|macy|matic)\b", 1.5), (r"\bsanction(s|ed)?\b", 2.5),
         (r"\btrade truce\b", 3), (r"\btrade (deal|pact)\b", 2),
+        (r"\bpeace talks\b", 2.5), (r"\bfactions\b", 2), (r"\bwithdraw forces\b", 2.5),
+        (r"\bescalation\b", 2.5),
     ],
     "Macroeconomic": [
         (r"\binflation|\bcpi\b", 3), (r"\binterest rates?\b|\brate (hike|cut)s?\b", 3),
@@ -124,52 +143,52 @@ EVENT_RULES = {
         (r"\brecession", 3), (r"\bunemployment|\bjobs report|\bpayrolls", 2.5),
         (r"\byield curve|\btreasury yields?", 2.5), (r"\bpmi\b", 2), (r"\bstagflation", 3),
         (r"\bbasis points?\b|\bbps\b", 1.5), (r"\bconsumer (spending|confidence)", 2),
-        # (c) expansions — standard newswire macro vocabulary
         (r"\bretail sales\b", 2.5), (r"\btreasury auction\b", 2.5),
         (r"\bmortgage rates?\b", 2.5), (r"\btightening\b", 2),
         (r"\brate hike(s)?\b|\brate cut(s)?\b", 3),
         (r"\bond yields?\b|\b10-year\b|\b10 year\b", 2),
         (r"\bpayrolls?\b", 2.5), (r"\bfomc\b", 3), (r"\bhiking\b|\bhawkish\b|\bdovish\b", 2),
         (r"\byields?\b", 1.5),
+        (r"\bpolicy rate\b", 2.5), (r"\bbond purchase\b", 2.5), (r"\bjobless claims\b", 2.5),
+        (r"\blabour market\b", 2.5),
     ],
     "Credit Event": [
         (r"\bdefault", 3.5), (r"\bbankrupt", 3.5), (r"\bchapter 11\b", 3.5),
-        # (b) "downgrad" only fires here when debt/rating context is present — enforced in classify_event
         (r"\bdowngrad", 2.5),
         (r"\bcredit rating|\bmoody|\bs&p global ratings|\bfitch", 2),
         (r"\binsolven", 3.5), (r"\bbailout", 3), (r"\bdebt restructuring|\brestructur", 2.5),
         (r"\bcredit spreads?\b|\bcds\b", 2.5), (r"\bbank run|\bliquidity (crisis|crunch)", 3.5),
         (r"\bnon-performing|\bloan losses|\bwrite-?downs?", 2.5), (r"\bcovenant", 2),
-        # (c) expansions — rating agency announcements and bond issuance
         (r"\brating agency\b|\brating (upgrade|downgrade|affirm|affirmation)\b", 2.5),
         (r"\bupgrade[sd]?\b.*\b(debt|bonds?|notes?|rating)\b", 2),
         (r"\binvestment.?grade\b|\bjunk\b|\bsenior notes?\b", 2.5),
         (r"\bcontagion\b", 3), (r"\bcredit\b", 1.5),
+        (r"\brefinanc", 2.5), (r"\bmaturing debt\b", 2.5), (r"\bliquidity\b", 2),
+        (r"\bextends? maturity\b", 2.5), (r"\bcredit facility\b", 2.5),
     ],
     "Merger/Acquisition": [
         (r"\bacquir", 3), (r"\bacquisition", 3), (r"\bmerger|\bmerge\b|\bmerges\b", 3),
         (r"\btakeover", 3), (r"\bbuyout", 3), (r"\bbid for\b|\bdeal to buy", 2.5),
-        (r"\bto buy\b.*\b(billion|million)", 2), (r"\bdivest|\bspin-?off", 2),
-        # (c) expansions — general M&A vocabulary
+        (r"\bto buy\b.*\b(billion|million|bn|m)\b", 2.5), (r"\bdivest|\bspin-?off", 2),
         (r"\bstrategic alternatives?\b", 2.5), (r"\bpossible sale\b|\bpotential sale\b", 2.5),
         (r"\btakeover premium\b|\bpremium (to|for) (acquire|buy|take)\b", 2.5),
         (r"\bprivate equity\b|\blbo\b", 2), (r"\bgo private\b|\btake.*private\b", 2.5),
         (r"\bshareholders? (approve|vote)\b", 2),
+        (r"\bunsolicited proposal\b", 2.5), (r"\bpremium\b", 1.5),
     ],
     "Product Launch": [
         (r"\blaunch", 3), (r"\bunveil", 3), (r"\bannounces? new", 2.5), (r"\brelease[sd]?\b", 1.5),
         (r"\bnew (iphone|model|chip|feature|product|service)", 3), (r"\brolls? out", 2.5),
         (r"\bintroduc", 2), (r"\bfda approv", 3), (r"\bbreakthrough", 1.5),
-        # (c) expansions — product debut vocabulary
         (r"\bdebuts?\b", 3), (r"\bversion \d+\b", 2), (r"\bnew (tier|platform|tool)\b", 2.5),
         (r"\bad.?supported tier\b", 2), (r"\bpre.?order\b", 1.5),
+        (r"\bupdate\b", 1.5), (r"\brelease\b", 1.5),
     ],
     "Earnings": [
         (r"\bearnings", 3), (r"\bquarterly results|\bq[1-4]\b", 2.5), (r"\brevenue", 2),
         (r"\bguidance|\boutlook", 2.5), (r"\beps\b", 3),
         (r"\bbeats? (estimates|expectations|forecasts)", 3),
         (r"\bmiss(es)? (estimates|expectations|forecasts)", 3), (r"\bprofit warning", 3),
-        # (c) expansions — broader earnings vocabulary
         (r"\bannual (profit|loss|results|earnings)\b", 2.5),
         (r"\bthird.?quarter results?\b|\bsecond.?quarter results?\b|\bfirst.?quarter results?\b", 2.5),
         (r"\bquarterly (loss|profit|income)\b", 2.5),
@@ -177,28 +196,32 @@ EVENT_RULES = {
         (r"\bprofit\b", 1.5), (r"\bloss\b", 1.5),
         (r"\bto report\b.*\b(results|earnings|quarter)\b", 2.5),
         (r"\bresults\b", 1.5),
+        (r"\bnet income\b", 2.5), (r"\bquarterly sales\b", 2.5), (r"\btargets\b", 1.5),
     ],
     "Regulatory/Legal": [
         (r"\blawsuit|\bsued?\b|\bsettlement", 3), (r"\bantitrust", 3.5),
         (r"\bsec\b|\bdoj\b|\bftc\b", 2.5), (r"\bregulator|\bregulation|\bfined?\b", 2.5),
         (r"\binvestigation|\bprobe\b", 3), (r"\bsubpoena|\bindict", 3),
         (r"\bcompliance|\bfraud", 2.5),
-        # (c) expansions — standard legal/regulatory vocabulary
         (r"\bfines\b|\bpenalt(y|ies)\b", 2.5), (r"\bverdict\b|\bruling\b", 2.5),
         (r"\bhearing\b", 2), (r"\blicen(ce|se)\b", 2), (r"\bban\b", 2),
         (r"\btax proposal\b|\bwindfall tax\b", 2.5), (r"\bappeal(s)?\b", 1.5),
         (r"\bcourt\b", 2), (r"\bshort selling\b", 2),
         (r"\bdata privacy\b|\bpatent\b", 2), (r"\bstress (test|exercise)\b", 2),
+        (r"\bwatchdog\b", 2.5), (r"\bmarket manipulation\b", 2.5), (r"\bsuit\b", 2.0),
+        (r"\bclaims lacked merit\b", 2.5), (r"\bdraft rules\b", 2.5),
+        (r"\bcharge.*\bdefendants?\b", 2.5), (r"\bsue.*\bdefendants?\b", 2.5),
     ],
     "Cyber/Operational": [
         (r"\bcyber", 3.5), (r"\bbreach", 3), (r"\bransomware", 3.5), (r"\bhack", 3),
         (r"\boutage", 3), (r"\brecall", 3), (r"\bsupply chain", 2.5),
         (r"\bfactory fire|\bstrike\b", 2),
-        # (c) expansions — operational disruption vocabulary
         (r"\bmaintenance\b", 2), (r"\bunusual activity\b", 2.5),
         (r"\bsystems? (down|restored|investigating)\b", 2.5),
         (r"\bdata (lost|leaked|compromised)\b", 2.5),
         (r"\bapp (down|unavailable)\b", 2), (r"\bstrike action\b", 2),
+        (r"\bsystem upgrade\b", 2.5), (r"\boffline\b", 2.0), (r"\bpipeline leak\b", 2.5),
+        (r"\btechnology glitch\b", 2.5), (r"\bservers? (down|froze|lost)\b", 2.5),
     ],
 }
 
