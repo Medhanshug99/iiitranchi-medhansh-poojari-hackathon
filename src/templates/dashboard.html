@@ -4,120 +4,410 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ShockWire Dashboard</title>
+<script>
+/* Apply theme before first paint to prevent flash */
+(function(){
+  var t='light';
+  try{t=localStorage.getItem('sw-theme')||'light';}catch(e){}
+  document.documentElement.setAttribute('data-theme',t);
+})();
+</script>
 <style>
+/* ===== Design Tokens ===== */
 :root {
-  --bg: #f9fafb;
+  /* Light theme (default) */
+  --bg: #f5f6f8;
   --surface: #ffffff;
-  --text: #111827;
-  --text-muted: #6b7280;
+  --text: #1a1d23;
+  --text-muted: #6c7280;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --border: #d9dce3;
+  --danger: #dc2626;
+  --success: #16a34a;
+  --danger-bg: #fef2f2;
+  --success-bg: #f0fdf4;
+  --danger-text: #991b1b;
+  --success-text: #166534;
+  --overlay: rgba(0,0,0,0.4);
+  --shadow: 0 1px 2px rgba(0,0,0,0.04);
+  --font: "Inter", "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --radius: 6px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  /* Chart palette — muted, distinguishable in both themes */
+  --chart-1: #2563eb;
+  --chart-2: #dc2626;
+  --chart-3: #d97706;
+  --chart-4: #16a34a;
+  --chart-5: #7c3aed;
+  --chart-6: #0891b2;
+}
+
+[data-theme="dark"] {
+  --bg: #111318;
+  --surface: #1a1d24;
+  --text: #e5e7eb;
+  --text-muted: #9ca3af;
   --primary: #3b82f6;
-  --border: #e5e7eb;
-  --danger: #ef4444;
-  --success: #10b981;
-  --danger-bg: #fee2e2;
-  --success-bg: #d1fae5;
-  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --radius: 8px;
+  --primary-hover: #60a5fa;
+  --border: #2d3139;
+  --danger: #f87171;
+  --success: #4ade80;
+  --danger-bg: #2d1618;
+  --success-bg: #0d2818;
+  --danger-text: #fca5a5;
+  --success-text: #86efac;
+  --overlay: rgba(0,0,0,0.6);
+  --shadow: 0 1px 2px rgba(0,0,0,0.12);
+  --chart-1: #60a5fa;
+  --chart-2: #f87171;
+  --chart-3: #fbbf24;
+  --chart-4: #4ade80;
+  --chart-5: #a78bfa;
+  --chart-6: #22d3ee;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #111827;
-    --surface: #1f2937;
-    --text: #f9fafb;
-    --text-muted: #9ca3af;
-    --border: #374151;
-    --danger: #f87171;
-    --success: #34d399;
-    --danger-bg: #7f1d1d;
-    --success-bg: #064e3b;
-  }
-}
-
-* { box-sizing: border-box; }
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; }
 body {
   font-family: var(--font);
-  background-color: var(--bg);
+  background: var(--bg);
   color: var(--text);
   margin: 0;
-  padding: 20px;
+  padding: var(--space-lg);
   line-height: 1.5;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
 }
-.container { max-width: 1440px; margin: 0 auto; }
-h1, h2, h3, h4 { margin-top: 0; }
-a { color: var(--primary); text-decoration: none; }
-button {
-  background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 4px;
-  cursor: pointer; font-family: inherit; font-size: 14px;
-}
-button:hover { opacity: 0.9; }
-button:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* Tabular nums for all numeric content */
+.kpi-val, td, .stress-total, .stress-diff, .chip,
+input[type="range"] + span, #rebTimeLabel, #impactVal {
+  font-variant-numeric: tabular-nums;
+}
+
+.container { max-width: 1400px; margin: 0 auto; }
+h1, h2, h3, h4 { margin-top: 0; font-weight: 600; }
+h1 { font-size: 20px; letter-spacing: -0.01em; }
+h2 { font-size: 16px; margin-bottom: var(--space-md); }
+h4 { font-size: 14px; margin-bottom: var(--space-sm); }
+a { color: var(--primary); text-decoration: none; }
+
+/* ===== Buttons ===== */
+button {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+button:hover { background: var(--primary-hover); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ===== Card ===== */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 20px;
-  margin-bottom: 20px;
-  overflow: hidden;
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
+  box-shadow: var(--shadow);
 }
 
-/* Header & KPIs */
-.header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
-.badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; background: var(--border); color: var(--text); }
-.badge.live { background: var(--success); color: white; }
-.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px;}
-.kpi-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; }
-.kpi-val { font-size: 28px; font-weight: bold; margin: 8px 0; }
-.kpi-label { font-size: 14px; color: var(--text-muted); }
+/* ===== Header ===== */
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
 
-/* Table */
+/* ===== Theme Toggle ===== */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 5px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s, border-color 0.15s;
+}
+.theme-toggle:hover {
+  border-color: var(--primary);
+}
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.theme-toggle svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* ===== Badge ===== */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--bg);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.badge.live {
+  background: var(--success-bg);
+  color: var(--success-text);
+  border-color: var(--success);
+}
+
+/* ===== KPI Grid ===== */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+.kpi-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-md);
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.kpi-val {
+  font-size: 26px;
+  font-weight: 700;
+  margin: var(--space-xs) 0;
+  color: var(--text);
+}
+.kpi-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* ===== Table ===== */
 .table-responsive { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
-th { color: var(--text-muted); font-weight: 600; cursor: pointer; white-space: nowrap; }
-th:hover { color: var(--text); }
-tr:hover { background: var(--bg); }
-.text-truncate { max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+th {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  user-select: none;
+}
+th.sortable { cursor: pointer; }
+th.sortable:hover { color: var(--text); }
+th.sortable::after {
+  content: "";
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: 6px;
+  vertical-align: middle;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-bottom: 4px solid currentColor;
+  opacity: 0.4;
+}
+th.sortable.sort-desc::after {
+  border-bottom: none;
+  border-top: 4px solid currentColor;
+  opacity: 0.8;
+}
+th.sortable.sort-asc::after {
+  opacity: 0.8;
+}
+tr:hover td { background: var(--bg); }
+.text-truncate {
+  max-width: 280px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
 .text-truncate:hover { white-space: normal; }
-.high-impact { border-left: 4px solid var(--danger); }
+.high-impact { border-left: 3px solid var(--danger); }
 
-/* Controls */
-.controls { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-.control-group { display: flex; align-items: center; gap: 8px; font-size: 14px; }
-select, input { padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text); font-family: inherit; }
+/* ===== Controls ===== */
+.controls { display: flex; gap: var(--space-md); flex-wrap: wrap; margin-bottom: var(--space-md); align-items: center; }
+.control-group { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.control-group label { color: var(--text-muted); font-weight: 500; white-space: nowrap; }
+select, input[type="text"] {
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+}
+select:focus, input:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: -1px;
+}
 
-/* Charts (SVG) */
-.chart-container { position: relative; width: 100%; height: 300px; margin-bottom: 20px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); }
+/* ===== Charts ===== */
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  margin-bottom: var(--space-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
 .svg-chart { width: 100%; height: 100%; overflow: visible; }
-.tooltip { position: absolute; background: var(--surface); border: 1px solid var(--border); padding: 8px; border-radius: 4px; font-size: 12px; pointer-events: none; opacity: 0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 10; white-space: nowrap;}
+.tooltip {
+  position: absolute;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: var(--shadow);
+  z-index: 10;
+  white-space: nowrap;
+  color: var(--text);
+}
 .axis line, .axis path { stroke: var(--border); stroke-width: 1; }
 .axis text { fill: var(--text-muted); font-size: 10px; }
 .grid-line { stroke: var(--border); stroke-dasharray: 4; }
 
-/* Stress test grid */
-.stress-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+/* ===== Stress ===== */
+.stress-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); }
 @media (max-width: 768px) { .stress-grid { grid-template-columns: 1fr; } }
-.stress-shocks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px; }
-.stress-total { font-size: 32px; font-weight: bold; margin-bottom: 4px;}
-.stress-diff { font-size: 18px; font-weight: 500; }
+.stress-shocks { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); font-size: 13px; }
+.stress-total { font-size: 28px; font-weight: 700; margin-bottom: var(--space-xs); }
+.stress-diff { font-size: 16px; font-weight: 500; }
 .text-danger { color: var(--danger); }
 .text-success { color: var(--success); }
-.bg-danger { background-color: var(--danger-bg); color: var(--danger); }
-.bg-success { background-color: var(--success-bg); color: var(--success); }
+.bg-danger { background-color: var(--danger-bg); color: var(--danger-text); }
+.bg-success { background-color: var(--success-bg); color: var(--success-text); }
 
-/* Bars */
-.bar-wrap { display: flex; align-items: center; width: 60px; height: 12px; background: var(--border); border-radius: 6px; overflow: hidden; position: relative;}
+/* ===== Bars ===== */
+.bar-wrap {
+  display: flex;
+  align-items: center;
+  width: 56px;
+  height: 10px;
+  background: var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+  position: relative;
+}
 .bar-inner { height: 100%; }
 .bar-sent-neg { background: var(--danger); right: 50%; position: absolute; }
 .bar-sent-pos { background: var(--success); left: 50%; position: absolute; }
 .bar-impact { background: var(--primary); }
 
-.chip { display: inline-block; padding: 2px 8px; border-radius: 12px; background: var(--border); font-size: 12px; margin: 2px; }
+.chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  margin: 2px;
+}
 
-textarea { width: 100%; height: 80px; resize: vertical; margin-bottom: 12px; }
+textarea {
+  width: 100%;
+  height: 76px;
+  resize: vertical;
+  margin-bottom: var(--space-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: var(--space-sm);
+}
+textarea:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: -1px;
+}
 
-.loader { display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; color: white; font-size: 24px; }
+.example-btn {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  transition: border-color 0.15s;
+}
+.example-btn:hover { border-color: var(--primary); color: var(--text); }
+
+.loader {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--overlay);
+  z-index: 999;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* ===== Footer ===== */
+.footer {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: var(--space-xl);
+  padding-bottom: var(--space-md);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  body { padding: var(--space-md); }
+  .header-row { flex-direction: column; align-items: flex-start; }
+  h1 { font-size: 17px; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .stress-grid { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
@@ -127,32 +417,51 @@ textarea { width: 100%; height: 80px; resize: vertical; margin-bottom: 12px; }
   <!-- 1. Header & KPIs -->
   <div class="header-row">
     <div>
-      <h1>ShockWire: Real-Time AI/NLP Financial Risk Engine</h1>
-      <span id="liveBadge" class="badge">Loading Mode...</span>
+      <h1>ShockWire</h1>
+      <span id="liveBadge" class="badge">Loading...</span>
     </div>
-    <div style="display: flex; gap: 10px;">
+    <div class="header-actions">
       <button onclick="refreshData(false)">Refresh (sample)</button>
       <button onclick="refreshData(true)">Refresh (live)</button>
+      <button class="theme-toggle" id="themeToggle"
+              onclick="toggleTheme()"
+              aria-label="Switch between light and dark theme">
+        <svg id="themeIconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg id="themeIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <span id="themeLabel">Dark</span>
+      </button>
     </div>
   </div>
 
   <div class="kpi-grid">
-    <div class="kpi-box"><div class="kpi-label">Total Signals</div><div class="kpi-val" id="kpiTotal">-</div></div>
+    <div class="kpi-box"><div class="kpi-label">Total signals</div><div class="kpi-val" id="kpiTotal">-</div></div>
     <div class="kpi-box"><div class="kpi-label">News / Social</div><div class="kpi-val" id="kpiSources">- / -</div></div>
-    <div class="kpi-box"><div class="kpi-label">Avg Sentiment</div><div class="kpi-val" id="kpiSentiment">-</div></div>
-    <div class="kpi-box"><div class="kpi-label">High Impact (>7)</div><div class="kpi-val" id="kpiHighImpact">-</div></div>
-    <div class="kpi-box"><div class="kpi-label">Stress Triggers</div><div class="kpi-val" id="kpiStressRuns">-</div></div>
+    <div class="kpi-box"><div class="kpi-label">Avg sentiment</div><div class="kpi-val" id="kpiSentiment">-</div></div>
+    <div class="kpi-box"><div class="kpi-label">High impact (&gt;7)</div><div class="kpi-val" id="kpiHighImpact">-</div></div>
+    <div class="kpi-box"><div class="kpi-label">Stress triggers</div><div class="kpi-val" id="kpiStressRuns">-</div></div>
   </div>
 
   <!-- 2. Signal Feed -->
   <div class="card">
-    <h2>Signal Feed</h2>
+    <h2>Signal feed</h2>
     <div class="controls">
       <div class="control-group">
-        <label>Search:</label><input type="text" id="feedSearch" oninput="renderFeed()">
+        <label for="feedSearch">Search:</label><input type="text" id="feedSearch" oninput="renderFeed()">
       </div>
       <div class="control-group">
-        <label>Source:</label>
+        <label for="feedSource">Source:</label>
         <select id="feedSource" onchange="renderFeed()">
           <option value="">All</option>
           <option value="news">News</option>
@@ -160,13 +469,13 @@ textarea { width: 100%; height: 80px; resize: vertical; margin-bottom: 12px; }
         </select>
       </div>
       <div class="control-group">
-        <label>Event Type:</label>
+        <label for="feedEvent">Event type:</label>
         <select id="feedEvent" onchange="renderFeed()">
           <option value="">All</option>
         </select>
       </div>
       <div class="control-group">
-        <label>Min Impact: <span id="impactVal">1</span></label>
+        <label for="feedImpact">Min impact: <span id="impactVal">1</span></label>
         <input type="range" id="feedImpact" min="1" max="10" step="0.5" value="1" oninput="document.getElementById('impactVal').innerText=this.value; renderFeed()">
       </div>
     </div>
@@ -174,11 +483,11 @@ textarea { width: 100%; height: 80px; resize: vertical; margin-bottom: 12px; }
       <table>
         <thead>
           <tr>
-            <th onclick="sortFeed('ts')">Time ⇅</th>
-            <th onclick="sortFeed('source_type')">Source ⇅</th>
-            <th onclick="sortFeed('event_type')">Event ⇅</th>
-            <th onclick="sortFeed('sentiment')">Sentiment ⇅</th>
-            <th onclick="sortFeed('impact')">Impact ⇅</th>
+            <th class="sortable" onclick="sortFeed('ts')" id="th-ts">Time</th>
+            <th class="sortable" onclick="sortFeed('source_type')" id="th-source_type">Source</th>
+            <th class="sortable" onclick="sortFeed('event_type')" id="th-event_type">Event</th>
+            <th class="sortable" onclick="sortFeed('sentiment')" id="th-sentiment">Sentiment</th>
+            <th class="sortable" onclick="sortFeed('impact')" id="th-impact">Impact</th>
             <th>Tickers</th>
             <th>Text</th>
           </tr>
@@ -190,13 +499,13 @@ textarea { width: 100%; height: 80px; resize: vertical; margin-bottom: 12px; }
 
   <!-- 3. Module A: Rebalancer -->
   <div class="card">
-    <h2>Module A: Tactical Index Rebalancer</h2>
+    <h2>Module A: Tactical index rebalancer</h2>
     <p class="kpi-label">Weights tilt towards positive-sentiment stocks and away from negative ones, capped at 15% and floored at 2%.</p>
     
     <div class="header-row" style="margin-bottom: 0;">
       <div>Turnover: <strong id="rebTurnover">-</strong></div>
-      <div>Top Risers: <span id="rebRisers">-</span></div>
-      <div>Top Fallers: <span id="rebFallers">-</span></div>
+      <div>Top risers: <span id="rebRisers">-</span></div>
+      <div>Top fallers: <span id="rebFallers">-</span></div>
     </div>
     
     <div class="chart-container" id="rebLineChartCont" style="height: 350px;">
@@ -206,7 +515,7 @@ textarea { width: 100%; height: 80px; resize: vertical; margin-bottom: 12px; }
 
     <div class="controls">
       <div class="control-group" style="width: 100%;">
-        <label>Time Step:</label>
+        <label for="rebSlider">Time step:</label>
         <input type="range" id="rebSlider" min="0" max="0" value="0" style="flex:1" oninput="updateRebBarChart()">
         <span id="rebTimeLabel" style="width: 150px; text-align: right; font-size:12px; font-family:monospace;">-</span>
       </div>
@@ -220,12 +529,12 @@ textarea { width: 100%; height: 80px; resize: vertical; margin-bottom: 12px; }
 
   <!-- 4. Module B: Stress Tester -->
   <div class="card">
-    <h2>Module B: Strategic Stress Tester</h2>
+    <h2>Module B: Strategic stress tester</h2>
     <p class="kpi-label">Illustrative shocks on a synthetic portfolio, not a regulatory scenario.</p>
     
     <div class="controls">
       <div class="control-group">
-        <label>Scenario:</label>
+        <label for="stressSelector">Scenario:</label>
         <select id="stressSelector" onchange="renderStress()"></select>
       </div>
     </div>
@@ -240,19 +549,19 @@ textarea { width: 100%; height: 80px; resize: vertical; margin-bottom: 12px; }
           <div id="stressTriggerBox" style="margin-top: 12px; padding: 10px; background: var(--bg); border-left: 3px solid var(--primary); font-size:13px; display:none;"></div>
         </div>
         <div>
-          <div class="kpi-label">Total Portfolio Value (After)</div>
+          <div class="kpi-label">Total portfolio value (after)</div>
           <div class="stress-total" id="stressTotal">-</div>
           <div class="stress-diff" id="stressDiff">-</div>
         </div>
       </div>
 
-      <h4>P&L by Asset Type</h4>
+      <h4>P&amp;L by asset type</h4>
       <div class="chart-container" style="height: 200px;" id="stressBarCont">
         <svg class="svg-chart" id="stressBarChart"></svg>
         <div class="tooltip" id="stressBarTooltip"></div>
       </div>
 
-      <h4>Worst 5 Positions</h4>
+      <h4>Worst 5 positions</h4>
       <div class="table-responsive">
         <table>
           <thead>
@@ -264,7 +573,7 @@ textarea { width: 100%; height: 80px; resize: vertical; margin-bottom: 12px; }
               <th>Sector</th>
               <th style="text-align:right;">Before</th>
               <th style="text-align:right;">After</th>
-              <th style="text-align:right;">P&L</th>
+              <th style="text-align:right;">P&amp;L</th>
             </tr>
           </thead>
           <tbody id="stressTable"></tbody>
@@ -275,11 +584,11 @@ textarea { width: 100%; height: 80px; resize: vertical; margin-bottom: 12px; }
 
   <!-- 5. Analyze -->
   <div class="card">
-    <h2>Try It Live</h2>
-    <div style="display:flex; gap:8px; margin-bottom: 8px;">
-      <button class="badge" style="background:var(--bg)" onclick="document.getElementById('analyzeText').value='Escalating conflict in the Middle East sends oil prices soaring, markets panic';">Ex 1: Geopolitical</button>
-      <button class="badge" style="background:var(--bg)" onclick="document.getElementById('analyzeText').value='$AAPL blows past earnings estimates, record iPhone sales, guidance up';">Ex 2: Earnings</button>
-      <button class="badge" style="background:var(--bg)" onclick="document.getElementById('analyzeText').value='Regional bank halts withdrawals, contagion fears spread across financials';">Ex 3: Credit</button>
+    <h2>Try it live</h2>
+    <div style="display:flex; gap:8px; margin-bottom: 8px; flex-wrap: wrap;">
+      <button class="example-btn" onclick="document.getElementById('analyzeText').value='Escalating conflict in the Middle East sends oil prices soaring, markets panic';">Ex 1: Geopolitical</button>
+      <button class="example-btn" onclick="document.getElementById('analyzeText').value='$AAPL blows past earnings estimates, record iPhone sales, guidance up';">Ex 2: Earnings</button>
+      <button class="example-btn" onclick="document.getElementById('analyzeText').value='Regional bank halts withdrawals, contagion fears spread across financials';">Ex 3: Credit</button>
     </div>
     <textarea id="analyzeText" placeholder="Enter headline or tweet here..."></textarea>
     <div class="controls">
@@ -289,16 +598,46 @@ textarea { width: 100%; height: 80px; resize: vertical; margin-bottom: 12px; }
       </select>
       <button onclick="runAnalyze()">Analyze</button>
     </div>
-    <div id="analyzeResult" style="display:none; padding: 16px; background: var(--bg); border-radius: var(--radius); border: 1px solid var(--border);"></div>
+    <div id="analyzeResult" style="display:none; padding: var(--space-md); background: var(--bg); border-radius: var(--radius); border: 1px solid var(--border);"></div>
   </div>
 
-  <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 40px;">
+  <div class="footer">
     Synthetic sample data for demonstration. Not investment advice. <br>
     Run command: python -m src.app
   </div>
 </div>
 
 <script>
+// --- THEME TOGGLE ---
+function getTheme() {
+  return document.documentElement.getAttribute('data-theme') || 'light';
+}
+function applyThemeUI() {
+  var t = getTheme();
+  var sun = document.getElementById('themeIconSun');
+  var moon = document.getElementById('themeIconMoon');
+  var label = document.getElementById('themeLabel');
+  if (t === 'dark') {
+    sun.style.display = 'none';
+    moon.style.display = 'block';
+    label.textContent = 'Light';
+  } else {
+    sun.style.display = 'block';
+    moon.style.display = 'none';
+    label.textContent = 'Dark';
+  }
+}
+function toggleTheme() {
+  var next = getTheme() === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('sw-theme', next); } catch(e) {}
+  applyThemeUI();
+  // Redraw charts with new colours
+  if (globalData.rebalance) { drawRebLineChart(); updateRebBarChart(); }
+  if (globalData.stress) { renderStress(); }
+}
+applyThemeUI();
+
 // --- STATE ---
 let globalData = {
   summary: null,
@@ -371,9 +710,9 @@ function populateUI() {
   
   // KPIs
   const s = globalData.summary;
-  let modeText = 'Sample Data';
-  if (s.live) modeText = `Live Data (News: ${s.sources.news}, Social: ${s.sources.social})`;
-  else if (s.live_requested) modeText = 'Live Failed (Fallback to Sample)';
+  let modeText = 'Sample data';
+  if (s.live) modeText = `Live data (News: ${s.sources.news}, Social: ${s.sources.social})`;
+  else if (s.live_requested) modeText = 'Live failed (fallback to sample)';
   $('liveBadge').innerText = modeText;
   $('liveBadge').className = `badge ${s.live ? 'live' : ''}`;
   $('kpiTotal').innerText = s.total || 0;
@@ -398,9 +737,20 @@ function populateUI() {
 // --- SIGNAL FEED ---
 let feedSort = { col: 'ts', asc: false };
 
+function updateSortHeaders() {
+  document.querySelectorAll('th.sortable').forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+  });
+  const active = $('th-' + feedSort.col);
+  if (active) {
+    active.classList.add(feedSort.asc ? 'sort-asc' : 'sort-desc');
+  }
+}
+
 function sortFeed(col) {
   if (feedSort.col === col) feedSort.asc = !feedSort.asc;
   else { feedSort.col = col; feedSort.asc = col === 'ts' ? false : true; }
+  updateSortHeaders();
   renderFeed();
 }
 
@@ -427,6 +777,8 @@ function renderFeed() {
     if (valA > valB) return feedSort.asc ? 1 : -1;
     return 0;
   });
+
+  updateSortHeaders();
 
   tbody.innerHTML = filtered.map(s => {
     const sentW = Math.abs(s.sentiment) * 50;
@@ -484,10 +836,17 @@ function drawRebLineChart() {
   const history = r.history;
   const tickers = r.tickers;
   
-  // Find top 3 and bottom 3
+  // Use CSS variable-derived colours for chart lines
   const risers = new Set(r.summary.movers_up.slice(0,3).map(x=>x[0]));
   const fallers = new Set(r.summary.movers_down.slice(0,3).map(x=>x[0]));
-  const highlightColors = ["#ef4444", "#f97316", "#eab308", "#10b981", "#3b82f6", "#8b5cf6"];
+  const highlightColors = [
+    getComputedStyle(document.documentElement).getPropertyValue('--chart-2').trim(),
+    getComputedStyle(document.documentElement).getPropertyValue('--chart-3').trim(),
+    getComputedStyle(document.documentElement).getPropertyValue('--chart-5').trim(),
+    getComputedStyle(document.documentElement).getPropertyValue('--chart-4').trim(),
+    getComputedStyle(document.documentElement).getPropertyValue('--chart-1').trim(),
+    getComputedStyle(document.documentElement).getPropertyValue('--chart-6').trim()
+  ];
   let cIdx = 0;
   const colors = {};
   tickers.forEach(t => {
@@ -567,7 +926,7 @@ function updateRebBarChart() {
   if (hData.trigger) {
     $('rebTriggerInfo').innerHTML = `<strong>Event:</strong> ${hData.event_type} (Imp: ${hData.impact.toFixed(1)}, Sent: <span style="color:${signColor(hData.sentiment)}">${hData.sentiment.toFixed(2)}</span>)<br><em>"${hData.trigger}"</em>`;
   } else {
-    $('rebTriggerInfo').innerHTML = `<em>Initial State (No Trigger)</em>`;
+    $('rebTriggerInfo').innerHTML = `<em>Initial state (no trigger)</em>`;
   }
 
   const svg = $('rebBarChart');
@@ -670,7 +1029,7 @@ async function renderStress() {
 
   if (runData.trigger) {
     $('stressTriggerBox').style.display = 'block';
-    $('stressTriggerBox').innerHTML = `<strong>Trigger Signal:</strong> [Impact ${runData.trigger.impact.toFixed(1)}] ${fmtDate(runData.trigger.ts)}<br>${runData.trigger.text}`;
+    $('stressTriggerBox').innerHTML = `<strong>Trigger signal:</strong> [Impact ${runData.trigger.impact.toFixed(1)}] ${fmtDate(runData.trigger.ts)}<br>${runData.trigger.text}`;
   } else {
     $('stressTriggerBox').style.display = 'none';
   }
