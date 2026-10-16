@@ -1,6 +1,6 @@
 # ShockWire NLP Engine – Evaluation Results
 
-**Date:** 2026-10-06 17:20:31  
+**Date:** 2026-10-16 10:23:40  
 **Rows:** 103 total (45 dev / 58 test)  
 **Command:** `python -m src.evaluate`  
 
@@ -253,33 +253,168 @@
 
 ---
 
-## Round 2 Tuning Log
+## Final independent holdout (holdout #2)
 
-**Note:** Holdout #1 (data/labeled_holdout.csv) was used for Round-2 tuning and thus became part of the development pool. A second, fresh holdout dataset will be used for the final, independent estimate. 
+**45 rows, completely unseen during all development and tuning. Evaluated exactly once; no tuning afterwards.**
 
-### Before Round 2 (Holdout #1 Baseline)
-* **Sentiment Accuracy**: 68.9%
-* **Event Type Accuracy**: 53.3%
+### How to read these numbers
 
-### Changes Implemented
-1. **Broadened Event Vocabulary & Regexes**
-   * **Change:** Added standard newswire vocabulary per class (e.g. efinanc, extends maturity, peace talks, system upgrade, 
-et income, unsolicited proposal).
-   * **Justification:** (a) It is standard newswire vocabulary for those classes. (b) It fixes multiple fall-throughs to "Other".
-   * **Effect:** Greatly improved Event Type recall for specific classes, raising holdout #1 event accuracy from 53.3% to 91.1%.
-2. **Lower Minimum Score & Tie-break for Event Classification**
-   * **Change:** Reduced 	op < 2.0 threshold to 1.5 and used EVENT_SEVERITY for tie-breaking.
-   * **Justification:** (b) Fixes multiple development rows that fell through to "Other" due to weak signal weights.
-   * **Effect:** Allowed correctly mapped, albeit lower-weighted cues, to win out over the generic "Other".
-3. **Domain-Direction Flips for Sentiment**
-   * **Change:** Flipped "surge/jump/climb/spike" to negative when appearing near inflation, yields, claims, costs, losses; flipped "cut/slash" to positive for costs, rates, inflation.
-   * **Justification:** (a) Standard newswire knowledge (e.g. spiking inflation is bad). (b) Fixed multiple rows in DEV (e.g. H006, H009).
-   * **Effect:** Sentiment accuracy increased from 68.9% to 71.1% on the development pool.
-4. **Neutral Process Cues Expansion**
-   * **Change:** Added "consults", "convenes", "discussions", "names", "appoints", "completes review" to NEUTRAL_CUES.
-   * **Justification:** (a) Standard newswire vocabulary for routine/neutral corporate announcements.
-   * **Effect:** Reduced false positives/negatives on purely administrative updates.
+- **Holdout #1** (data/labeled_holdout.csv, 45 rows) was used as development data for Round 2 tuning. Its accuracy numbers are therefore **not independent**.
+- **The TEST split** of the 103-row main set (data/labeled_eval.csv, 58 rows) was inspected at baseline, so its post-tuning numbers are **not independent** either.
+- **Holdout #2** (data/labeled_holdout2.csv, 45 rows) is the **only fully independent estimate**. It was never seen by the developer until evaluation.
+- With 45 rows, each row is worth about 2.2 percentage points of accuracy, so small-sample noise is substantial.
 
-### After Round 2 (Holdout #1 / Development Pool Results)
-* **Sentiment Accuracy**: 71.1%
-* **Event Type Accuracy**: 91.1%
+---
+
+### HOLDOUT #2 (45 rows)
+
+#### Sentiment (45 rows)
+
+| Metric                       | Engine  | Majority baseline | Always-neutral baseline |
+| ---------------------------- | ------- | ----------------- | ----------------------- |
+| Accuracy                     | 0.622   | 0.444             | 0.267                   |
+| Macro-F1                     | 0.624   | —                 | —                       |
+| Gain over best baseline (pp) | +17.8pp | —                 | —                       |
+
+| Class    | Precision | Recall | F1    | Support |
+| -------- | --------- | ------ | ----- | ------- |
+| negative | 0.909     | 0.500  | 0.645 | 20      |
+| neutral  | 0.455     | 0.833  | 0.588 | 12      |
+| positive | 0.667     | 0.615  | 0.640 | 13      |
+
+**Confusion matrix (sentiment, 45 rows)**
+
+| true \ pred | negative | neutral | positive |
+| ----------- | -------- | ------- | -------- |
+| negative    | 10       | 7       | 3        |
+| neutral     | 1        | 10      | 1        |
+| positive    | 0        | 5       | 8        |
+
+#### Event Type (45 rows)
+
+| Metric                       | Engine  | Majority baseline |
+| ---------------------------- | ------- | ----------------- |
+| Accuracy                     | 0.622   | 0.111             |
+| Macro-F1                     | 0.658   | —                 |
+| Gain over best baseline (pp) | +51.1pp | —                 |
+
+| Class              | Precision | Recall | F1    | Support |
+| ------------------ | --------- | ------ | ----- | ------- |
+| Credit Event       | 1.000     | 0.800  | 0.889 | 5       |
+| Cyber/Operational  | 0.500     | 0.200  | 0.286 | 5       |
+| Earnings           | 1.000     | 0.800  | 0.889 | 5       |
+| Geopolitical       | 1.000     | 0.600  | 0.750 | 5       |
+| Macroeconomic      | 0.667     | 0.400  | 0.500 | 5       |
+| Merger/Acquisition | 1.000     | 0.400  | 0.571 | 5       |
+| Other              | 0.250     | 1.000  | 0.400 | 5       |
+| Product Launch     | 1.000     | 0.600  | 0.750 | 5       |
+| Regulatory/Legal   | 1.000     | 0.800  | 0.889 | 5       |
+
+**Confusion matrix (event type, 45 rows)**
+
+| true \ pred        | Credit Event | Cyber/Operational | Earnings | Geopolitical | Macroeconomic | Merger/Acquisition | Other | Product Launch | Regulatory/Legal |
+| ------------------ | ------------ | ----------------- | -------- | ------------ | ------------- | ------------------ | ----- | -------------- | ---------------- |
+| Credit Event       | 4            | 0                 | 0        | 0            | 0             | 0                  | 1     | 0              | 0                |
+| Cyber/Operational  | 0            | 1                 | 0        | 0            | 0             | 0                  | 4     | 0              | 0                |
+| Earnings           | 0            | 1                 | 4        | 0            | 0             | 0                  | 0     | 0              | 0                |
+| Geopolitical       | 0            | 0                 | 0        | 3            | 0             | 0                  | 2     | 0              | 0                |
+| Macroeconomic      | 0            | 0                 | 0        | 0            | 2             | 0                  | 3     | 0              | 0                |
+| Merger/Acquisition | 0            | 0                 | 0        | 0            | 0             | 2                  | 3     | 0              | 0                |
+| Other              | 0            | 0                 | 0        | 0            | 0             | 0                  | 5     | 0              | 0                |
+| Product Launch     | 0            | 0                 | 0        | 0            | 0             | 0                  | 2     | 3              | 0                |
+| Regulatory/Legal   | 0            | 0                 | 0        | 0            | 1             | 0                  | 0     | 0              | 4                |
+
+---
+
+### Error Analysis: HOLDOUT #2 misclassifications
+
+- **id=G011** [SENT] [EVT]
+  - Text: *Property group fails to repay maturing notes, trustees demand immediate payment*
+  - Sentiment: true=`negative` pred=`positive` — "demand" is keyed as positive (demand for product); here it means a legal demand, which the lexicon cannot distinguish.
+  - Event: true=`Credit Event` pred=`Other` — no credit-event keyword matched; "fails to repay" is not in the vocabulary.
+- **id=G014** [SENT]
+  - Text: *Utility sells $1bn of ten-year bonds to refinance existing debt*
+  - Sentiment: true=`neutral` pred=`negative` — "sells" is negative in the lexicon; in debt-issuance context it is neutral. Contextual flip needed.
+- **id=G036** [SENT]
+  - Text: *Hackers steal customer data from payments processor, regulators demand answers*
+  - Sentiment: true=`negative` pred=`positive` — same "demand" mismatch as G011; "steal" is not in the lexicon.
+- **id=G037** [EVT]
+  - Text: *Exchange says it will suspend trading for a short technical test on Saturday*
+  - Event: true=`Cyber/Operational` pred=`Other` — no cyber/operational keyword matched; "suspend trading" is not in the vocabulary.
+- **id=G038** [EVT]
+  - Text: *Warehouse fire halts distribution for the retailer ahead of peak season*
+  - Event: true=`Cyber/Operational` pred=`Other` — "halts" matched but mapped to Geopolitical; physical-event vocabulary is missing for Cyber/Operational.
+- **id=G039** [SENT] [EVT]
+  - Text: *Bank completes migration to new core system with no service disruption*
+  - Sentiment: true=`positive` pred=`neutral` — no positive keyword matched; "completes migration" is not in the lexicon.
+  - Event: true=`Cyber/Operational` pred=`Other` — "migration" and "core system" are not in the event vocabulary.
+- **id=G040** [SENT] [EVT]
+  - Text: *Mobile banking has been down since this morning. Can't pay anything. Awful.*
+  - Sentiment: true=`negative` pred=`neutral` — "Awful" and "down" are not in the lexicon.
+  - Event: true=`Cyber/Operational` pred=`Other` — no cyber/operational keyword matched; informal language misses the rules.
+- **id=G029** [EVT]
+  - Text: *Automaker's operating profit slumps 40% as price cuts and recall costs weigh*
+  - Event: true=`Earnings` pred=`Cyber/Operational` — "recall" matched Cyber/Operational; "profit slumps" was not strong enough for Earnings to win.
+- **id=G001** [SENT]
+  - Text: *Airstrikes hit port facilities as the conflict widens, shipping insurers raise war-risk premiums*
+  - Sentiment: true=`negative` pred=`neutral` — "raise" is positive in the lexicon; it cancelled out the negative direction-flip context. "Airstrikes" is not in the lexicon.
+- **id=G003** [EVT]
+  - Text: *Rival governments sign pact to reopen the main trade corridor, shipping stocks rise*
+  - Event: true=`Geopolitical` pred=`Other` — "pact" and "trade corridor" are not in the event vocabulary.
+- **id=G004** [SENT] [EVT]
+  - Text: *Government freezes foreign assets and expels diplomats as dispute over contested waters deepens*
+  - Sentiment: true=`negative` pred=`neutral` — "freezes", "expels" not in the lexicon.
+  - Event: true=`Geopolitical` pred=`Other` — "diplomats", "contested waters" are not in the event vocabulary.
+- **id=G006** [SENT]
+  - Text: *Core inflation reaccelerates to 5.8%, leaving the central bank no room to cut*
+  - Sentiment: true=`negative` pred=`neutral` — "inflation" and "cut" matched but "cut" flipped positive (cost-cutting context); net score was too close to zero.
+- **id=G007** [EVT]
+  - Text: *Hiring surges as employers add 310,000 jobs, wage growth stays moderate*
+  - Event: true=`Macroeconomic` pred=`Other` — "surges" matched but scored higher for another class; "hiring" and "jobs" are not in the vocabulary.
+- **id=G009** [EVT]
+  - Text: *Housing starts collapse 18% as mortgage costs climb, builders warn of a slump*
+  - Event: true=`Macroeconomic` pred=`Other` — "housing starts", "mortgage" are not in the event vocabulary.
+- **id=G010** [EVT]
+  - Text: *Waiting on the rate decision at 2pm. Positioning light, nothing to do until then.*
+  - Event: true=`Macroeconomic` pred=`Other` — "rate decision" is too informal/indirect; no keyword matched.
+- **id=G016** [SENT]
+  - Text: *Software firm agrees to be taken private in $11bn leveraged buyout*
+  - Sentiment: true=`positive` pred=`neutral` — "leveraged buyout" is not in the lexicon; no positive keyword matched.
+- **id=G017** [EVT]
+  - Text: *Bidder withdraws offer for rival grocer after shareholder opposition, shares drop*
+  - Event: true=`Merger/Acquisition` pred=`Other` — "withdraws offer" is not in the event vocabulary; "drop" matched but not for M&A.
+- **id=G018** [EVT]
+  - Text: *Two shipping lines confirm they are in preliminary discussions about combining operations*
+  - Event: true=`Merger/Acquisition` pred=`Other` — "combining operations" and "preliminary discussions" are not in the event vocabulary.
+- **id=G019** [SENT] [EVT]
+  - Text: *Chemical maker completes sale of its coatings unit at a higher price than analysts expected*
+  - Sentiment: true=`positive` pred=`neutral` — no positive keyword matched; "completes sale" is not in the lexicon.
+  - Event: true=`Merger/Acquisition` pred=`Other` — "sale of its … unit" is a divestiture; not in the vocabulary.
+- **id=G042** [SENT]
+  - Text: *Insurer lifts shareholder payout and announces a $3bn share repurchase*
+  - Sentiment: true=`positive` pred=`neutral` — "lifts" and "repurchase" are not in the lexicon.
+- **id=G043** [SENT]
+  - Text: *Founder resigns from the board after a dispute with management*
+  - Sentiment: true=`negative` pred=`neutral` — "resigns" and "dispute" are not in the lexicon.
+- **id=G022** [SENT]
+  - Text: *Launch of delivery drone service postponed after safety testing setbacks*
+  - Sentiment: true=`negative` pred=`positive` — "launch" is keyed as positive; "postponed" and "setbacks" are not in the lexicon to counteract it.
+- **id=G023** [SENT] [EVT]
+  - Text: *Cloud company expands its AI toolkit with new developer features*
+  - Sentiment: true=`neutral` pred=`positive` — "expands" is positive in the lexicon; in a product announcement context it is neutral.
+  - Event: true=`Product Launch` pred=`Other` — "AI toolkit" and "developer features" are not in the event vocabulary.
+- **id=G024** [EVT]
+  - Text: *Beverage group's new zero-sugar range tops supermarket sales charts in first month*
+  - Event: true=`Product Launch` pred=`Other` — "zero-sugar range" and "sales charts" are not in the event vocabulary.
+- **id=G025** [SENT]
+  - Text: *The new release is full of bugs. Rolled back to the old version, wasted my morning.*
+  - Sentiment: true=`negative` pred=`neutral` — informal language; "bugs", "wasted" are not in the lexicon.
+- **id=G032** [SENT]
+  - Text: *Competition authority closes probe into the grocer, finding no breach of rules*
+  - Sentiment: true=`positive` pred=`neutral` — "probe" and "breach" are negative in the lexicon; "finding no breach" is a positive outcome but the negation is not handled.
+- **id=G033** [EVT]
+  - Text: *Central bank consults on updated disclosure requirements for listed lenders*
+  - Event: true=`Regulatory/Legal` pred=`Macroeconomic` — "central bank" matched Macroeconomic; "disclosure requirements" is not in the Regulatory vocabulary.
+- **id=G034** [SENT]
+  - Text: *Court rules against the pharmaceutical maker in patent case, ordering $500m in damages*
+  - Sentiment: true=`negative` pred=`neutral` — "rules against" and "damages" (legal sense) are not in the lexicon.
