@@ -1,0 +1,46 @@
+id,text,sentiment,event_type,source_type
+G001,"Airstrikes hit port facilities as the conflict widens, shipping insurers raise war-risk premiums",negative,Geopolitical,news
+G002,"Leaders of the bloc to hold emergency video call on the border situation",neutral,Geopolitical,news
+G003,"Rival governments sign pact to reopen the main trade corridor, shipping stocks rise",positive,Geopolitical,news
+G004,"Government freezes foreign assets and expels diplomats as dispute over contested waters deepens",negative,Geopolitical,news
+G005,"Sanctions again. Energy prices in Europe are going to be painful this winter.",negative,Geopolitical,social
+G006,"Core inflation reaccelerates to 5.8%, leaving the central bank no room to cut",negative,Macroeconomic,news
+G007,"Hiring surges as employers add 310,000 jobs, wage growth stays moderate",positive,Macroeconomic,news
+G008,"Federal Reserve minutes show officials debating the pace of balance sheet reduction",neutral,Macroeconomic,news
+G009,"Housing starts collapse 18% as mortgage costs climb, builders warn of a slump",negative,Macroeconomic,news
+G010,"Waiting on the rate decision at 2pm. Positioning light, nothing to do until then.",neutral,Macroeconomic,social
+G011,"Property group fails to repay maturing notes, trustees demand immediate payment",negative,Credit Event,news
+G012,"Rating agency raises sovereign outlook to positive citing fiscal consolidation",positive,Credit Event,news
+G013,"Bank's credit losses double as commercial borrowers fall behind on payments",negative,Credit Event,news
+G014,"Utility sells $1bn of ten-year bonds to refinance existing debt",neutral,Credit Event,news
+G015,"Another default in the sector. Credit markets are clearly pricing in trouble.",negative,Credit Event,social
+G016,"Software firm agrees to be taken private in $11bn leveraged buyout",positive,Merger/Acquisition,news
+G017,"Bidder withdraws offer for rival grocer after shareholder opposition, shares drop",negative,Merger/Acquisition,news
+G018,"Two shipping lines confirm they are in preliminary discussions about combining operations",neutral,Merger/Acquisition,news
+G019,"Chemical maker completes sale of its coatings unit at a higher price than analysts expected",positive,Merger/Acquisition,news
+G020,"That acquisition announcement is a great strategic fit. Buying more on the dip.",positive,Merger/Acquisition,social
+G021,"Smartphone maker introduces foldable model, early demand exceeds supply",positive,Product Launch,news
+G022,"Launch of delivery drone service postponed after safety testing setbacks",negative,Product Launch,news
+G023,"Cloud company expands its AI toolkit with new developer features",neutral,Product Launch,news
+G024,"Beverage group's new zero-sugar range tops supermarket sales charts in first month",positive,Product Launch,news
+G025,"The new release is full of bugs. Rolled back to the old version, wasted my morning.",negative,Product Launch,social
+G026,"Retailer's profit more than doubles as online sales surge and margins widen",positive,Earnings,news
+G027,"Software group cuts annual revenue forecast, citing delayed customer spending",negative,Earnings,news
+G028,"Utility reports earnings per share of $1.12, matching analyst expectations",neutral,Earnings,news
+G029,"Automaker's operating profit slumps 40% as price cuts and recall costs weigh",negative,Earnings,news
+G030,"Great results from the bank this morning. Revenue up, costs down, dividend raised.",positive,Earnings,social
+G031,"Prosecutors charge former executives with accounting fraud at the lender",negative,Regulatory/Legal,news
+G032,"Competition authority closes probe into the grocer, finding no breach of rules",positive,Regulatory/Legal,news
+G033,"Central bank consults on updated disclosure requirements for listed lenders",neutral,Regulatory/Legal,news
+G034,"Court rules against the pharmaceutical maker in patent case, ordering $500m in damages",negative,Regulatory/Legal,news
+G035,"They fined them again and nothing changes. Compliance culture is rotten.",negative,Regulatory/Legal,social
+G036,"Hackers steal customer data from payments processor, regulators demand answers",negative,Cyber/Operational,news
+G037,"Exchange says it will suspend trading for a short technical test on Saturday",neutral,Cyber/Operational,news
+G038,"Warehouse fire halts distribution for the retailer ahead of peak season",negative,Cyber/Operational,news
+G039,"Bank completes migration to new core system with no service disruption",positive,Cyber/Operational,news
+G040,"Mobile banking has been down since this morning. Can't pay anything. Awful.",negative,Cyber/Operational,social
+G041,"Company names new chief executive, effective in the first quarter",neutral,Other,news
+G042,"Insurer lifts shareholder payout and announces a $3bn share repurchase",positive,Other,news
+G043,"Founder resigns from the board after a dispute with management",negative,Other,news
+G044,"Fund manager reweights holdings ahead of the annual index review",neutral,Other,news
+G045,"Slow morning. Reading through the filings before the open.",neutral,Other,social
